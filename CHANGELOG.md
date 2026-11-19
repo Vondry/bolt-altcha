@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-19
+
+Maintenance release: development tools and CI are updated. The extension's code, its
+configuration and its runtime requirements are unchanged.
+
+### Changed
+
+- Development tools updated: PHPStan 2.3.7 (was 2.3.4), phpstan-phpunit 2.1.2 (was 2.1.1),
+  phpstan-strict-rules 2.1.1 (was 2.1.0) and Rector 2.8.5 (was 2.8.3).
+- CI actions updated: `actions/checkout` 7.0.1, `actions/cache` 6.1.0, `actions/stale` 11.0.0
+  and `shivammathur/setup-php` v2 (newer commit).
+- Dependabot no longer proposes new major versions of Symfony components (Bolt 6 runs on
+  Symfony 6.4) or PHPUnit.
+
 ## [1.0.0] - 2026-11-19
 
 ### Added
@@ -40,5 +54,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   widget's texts are translated by Symfony and handed to the widget, so a project can reword
   them in its own translations/bolt_altcha.<locale>.yaml.
 
-[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/Vondry/bolt-altcha/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Vondry/bolt-altcha/releases/tag/v1.0.0
