@@ -1,0 +1,27 @@
+# ALTCHA — Deutsch (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (offizielle Website)'
+'Cancel': 'Abbrechen'
+'Enter code': 'Code eingeben'
+'Enter code you hear. Press Space to play audio.': 'Geben Sie den Code ein, den Sie hören. Drücken Sie die Leertaste, um die Audio abzuspielen.'
+'To proceed, please enter the code from the image below.': 'Um fortzufahren, geben Sie bitte den Code aus dem Bild unten ein.'
+'Verification failed. Try again later.': 'Überprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.'
+'Verification expired. Try again.': 'Überprüfung abgelaufen. Bitte versuchen Sie es erneut.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Geschützt durch <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (offizielle Website, öffnet in neuem Tab)">ALTCHA</a>'
+'Get an audio challenge': 'Audio-Herausforderung anfordern'
+'I’m not a robot': 'Ich bin kein Roboter'
+'Loading...': 'Lade...'
+'Reload': 'Neu laden'
+'Verify': 'Überprüfen'
+'Verification required!': 'Überprüfung erforderlich!'
+'Verified': 'Überprüft'
+'Verifying...': 'Wird überprüft...'
+'Verifying... please wait.': 'Überprüfung läuft... bitte warten.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Die Prüfung, dass Sie kein Roboter sind, ist fehlgeschlagen. Bitte senden Sie das Formular erneut ab.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Die ALTCHA-Dateien fehlen oder sind veraltet: Die Prüfung beim Anmelden ist ausgeschaltet und geschützte Formulare funktionieren möglicherweise nicht.'
+'Run on the server:': 'Auf dem Server ausführen:'

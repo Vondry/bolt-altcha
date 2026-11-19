@@ -1,3 +1,106 @@
-# Reference extension configuration file
+# ALTCHA – configuration (tomvondracek/bolt-altcha)
+#
+# Copied to config/extensions/tomvondracek-altcha.yaml by
+# `bin/console extensions:configure --with-config`; edit it there. A
+# tomvondracek-altcha_local.yaml next to it overrides single keys (e.g. `enabled: false` on a
+# development machine). Without the project file, these defaults apply.
+#
+# ALTCHA is a proof-of-work challenge: the visitor's browser solves a small puzzle before the form
+# is sent. Everything runs on this site: no third-party request, no cookie.
 
-foo: Bar
+# Kill switch. false: no widget is rendered and every check passes.
+enabled: true
+
+# The secret that signs the challenges is NOT in this file: set ALTCHA_HMAC_KEY in .env.local, or
+# in the secrets vault (`bin/console secrets:set ALTCHA_HMAC_KEY`), at least 32 random characters,
+# e.g. the output of `openssl rand -hex 32`. Without it, a key is derived from APP_SECRET, which
+# must then be strong as well (not Bolt's placeholder `!ChangeMe!`). With neither, the protection
+# stays off and the cache warm-up (cache:clear) fails as soon as this file protects something.
+
+# Name of the hidden field with the solution, for the login and for hand-written forms. (Inside a
+# Symfony form the field is called like this too: contact_form[altcha].)
+field_name: altcha
+
+# Challenge options, the defaults of every profile. The browser derives a key with `algorithm` and
+# `cost` for every counter from 0 until it finds the secret one the server picked between
+# `counter_min` and `counter_max`: about cost × counter derivations. With the values below that
+# takes ~0.5 s on a recent laptop and 1–2 s on a cheap phone; the widget runs it in Web Workers
+# while the visitor fills in the form or right after they submit it.
+challenge:
+  # PBKDF2/SHA-256, PBKDF2/SHA-384, PBKDF2/SHA-512, SHA-256, SHA-384 or SHA-512.
+  algorithm: PBKDF2/SHA-256
+  # 1–100000. The server derives one key at this cost for every challenge it hands out.
+  cost: 1000
+  # 1–1000000
+  counter_min: 1000
+  counter_max: 5000
+  # Length of the derived key in bytes: an even number, 16–64.
+  key_length: 32
+  # Seconds a challenge stays valid (30–86400). The widget fetches a new one when it expires.
+  expires: 600
+
+# Attributes of <altcha-widget>, the defaults of every profile, passed to the widget verbatim (the
+# names of the ALTCHA documentation: https://github.com/altcha-org/altcha#configuration).
+# `configuration` takes the widget's JSON options in camelCase. `challenge` and `name` are set by
+# the extension; `language` follows the page's locale unless you set it.
+#   auto:    off | onfocus | onload | onsubmit — when the puzzle is solved
+#   display: standard | bar | floating | overlay | invisible
+#   type:    checkbox | switch | native
+#   theme, workers, form: see the documentation
+widget:
+  # A hidden captcha: nothing is shown; when the visitor submits, the widget solves the puzzle
+  # (about a second) and then sends the form. For the familiar "I'm not a robot" box use
+  # `display: standard` (with `auto: onload` it ticks itself while the visitor types).
+  auto: onsubmit
+  display: invisible
+  configuration:
+    hideLogo: true
+    hideFooter: true
+
+# Named profiles. Each overrides `challenge` and `widget` above (key by key; `null` removes a
+# widget attribute). The profile name is signed into every challenge: a solution only works for
+# the profile it was issued for. `default` always exists.
+profiles:
+  default: {}
+  login:
+    challenge:
+      counter_min: 2000
+      counter_max: 8000
+
+# Bolt's own forms, protected without touching any template. Each takes false, true (the profile
+# with the same name, or `default`) or the name of a profile.
+bolt:
+  # /bolt/login. The widget appears in the `login_middle` widget slot, which Bolt's template and a
+  # theme's `login_template` print. A failure is the usual login error and counts towards the
+  # login throttling.
+  login: false
+  # /bolt/reset-password: the "send me a link" form.
+  reset_password: false
+  # /bolt/reset-password/reset: the new password form. Rarely needed: it already requires a valid
+  # link from the e-mail.
+  change_password: false
+
+# Any other Symfony form, by its name (the name of the root form, e.g. `contact` for a form whose
+# fields are called contact[email]), mapped to a profile (true = `default`). The field is added
+# and verified automatically.
+#   forms:
+#     contact: true
+forms: {}
+
+# Hand-written forms: route names whose POST requests must carry a solution in `field_name`,
+# mapped to a profile (true = `default`). Put {{ altcha_widget('<profile>') }} into the form.
+#   routes:
+#     newsletter_subscribe: true
+routes: {}
+
+# What a protected route answers to a request that fails:
+#   redirect_back: 303 back to the form (the Referer, same host only, else the homepage) with the
+#                  flash message "The check that you are not a robot failed. Please submit the
+#                  form again." (type `error`, translated in the `messages` domain)
+#   reject:        403 with an empty body
+on_route_failure: redirect_back
+
+# Challenges one IP address may fetch per minute from /altcha/challenge/…; more get 429. Every
+# widget on a page fetches one. 0 = no limit. Behind a reverse proxy, configure Symfony's trusted
+# proxies, or all visitors share the proxy's address.
+challenge_rate_limit: 60

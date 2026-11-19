@@ -1,0 +1,3 @@
+# ALTCHA — Türkçe (domain: security). Bolt's login template translates the login error in this domain.
+
+'The check that you are not a robot failed. Please try to log in again.': 'Robot olmadığınız doğrulanamadı. Lütfen yeniden giriş yapmayı deneyin.'

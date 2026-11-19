@@ -1,0 +1,3 @@
+# ALTCHA — 简体中文 (domain: security). Bolt's login template translates the login error in this domain.
+
+'The check that you are not a robot failed. Please try to log in again.': '人机验证失败。请重新登录。'

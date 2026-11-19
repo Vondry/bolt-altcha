@@ -1,0 +1,27 @@
+# ALTCHA — Türkçe (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (resmi web sitesi)'
+'Cancel': 'İptal'
+'Enter code': 'Kodu girin'
+'Enter code you hear. Press Space to play audio.': 'Duyduğunuz kodu girin. Ses dosyasını oynatmak için Boşluk tuşuna basın.'
+'To proceed, please enter the code from the image below.': 'Devam etmek için lütfen aşağıdaki resimdeki kodu girin.'
+'Verification failed. Try again later.': 'Doğrulama başarısız oldu. Lütfen daha sonra tekrar deneyin.'
+'Verification expired. Try again.': 'Doğrulama süresi doldu. Lütfen tekrar deneyin.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'ALTCHA tarafından korunuyor <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (resmi web sitesi, yeni sekmede açılır)">ALTCHA</a>'
+'Get an audio challenge': 'Sesli doğrulama al'
+'I’m not a robot': 'Ben robot değilim'
+'Loading...': 'Yükleniyor...'
+'Reload': 'Yeniden yükle'
+'Verify': 'Doğrula'
+'Verification required!': 'Doğrulama gerekli!'
+'Verified': 'Doğrulandı'
+'Verifying...': 'Doğrulama yapılıyor...'
+'Verifying... please wait.': 'Doğrulama yapılıyor... lütfen bekleyin.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Robot olmadığınız doğrulanamadı. Lütfen formu yeniden gönderin.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'ALTCHA dosyaları eksik veya güncel değil: girişteki denetim kapalı ve korumalı formlar çalışmayabilir.'
+'Run on the server:': 'Sunucuda çalıştırın:'

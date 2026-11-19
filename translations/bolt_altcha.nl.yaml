@@ -1,0 +1,27 @@
+# ALTCHA — Nederlands (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (officiële website)'
+'Cancel': 'Annuleren'
+'Enter code': 'Voer code in'
+'Enter code you hear. Press Space to play audio.': 'Voer de code in die je hoort. Druk op Spatie om de audio af te spelen.'
+'To proceed, please enter the code from the image below.': 'Om door te gaan, voert u de code uit de onderstaande afbeelding in.'
+'Verification failed. Try again later.': 'Verificatie mislukt. Probeer het later opnieuw.'
+'Verification expired. Try again.': 'Verificatie verlopen. Probeer het opnieuw.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Beschermd door <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (officiële website, opent in een nieuw tabblad)">ALTCHA</a>'
+'Get an audio challenge': 'Audio-uitdaging ontvangen'
+'I’m not a robot': 'Ik ben geen robot'
+'Loading...': 'Laden...'
+'Reload': 'Herladen'
+'Verify': 'Verifiëren'
+'Verification required!': 'Verificatie vereist!'
+'Verified': 'Geverifieerd'
+'Verifying...': 'Bezig met verifiëren...'
+'Verifying... please wait.': 'Bezig met verifiëren... even geduld a.u.b.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'De controle dat u geen robot bent, is mislukt. Verstuur het formulier opnieuw.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'De ALTCHA-bestanden ontbreken of zijn verouderd: de controle bij het inloggen staat uit en beveiligde formulieren werken mogelijk niet.'
+'Run on the server:': 'Voer uit op de server:'

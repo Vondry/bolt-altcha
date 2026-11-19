@@ -1,1 +1,49 @@
-# An example of a services.yaml file in an extension
+# Copied to config/packages/extension_bolt-altcha.yaml by `extensions:configure`.
+#
+# The extension's classes are auto-registered (autowired + autoconfigured) by Bolt's generated
+# config/services_bolt.yaml: the controller, the form type and its extension, the event
+# subscribers, the cache warmer and the Twig extension need nothing here.
+
+framework:
+  translator:
+    paths:
+      # The widget's texts and the form error (domain bolt_altcha), the login error (security) and
+      # the flash message (messages), in every language of Bolt's backend. Symfony loads these
+      # before the project's translations/, so a translations/bolt_altcha.<locale>.yaml of the
+      # project wins.
+      - '%kernel.project_dir%/vendor/tomvondracek/bolt-altcha/translations'
+
+twig:
+  # Register the @bolt-altcha Twig namespace at container level, so it resolves everywhere: web
+  # requests, the CLI (`debug:twig`, `lint:twig`, `cache:warmup`).
+  paths:
+    '%kernel.project_dir%/vendor/tomvondracek/bolt-altcha/templates': bolt-altcha
+
+  # Renders the ALTCHA field in every form, Bolt's password reset forms included.
+  form_themes:
+    - '@bolt-altcha/form/altcha.html.twig'
+
+services:
+  # The used solutions (ReplayStore), in var/data: unlike the application cache, `cache:clear`
+  # and Bolt's "Clear the cache" don't empty it, which would make solutions reusable again.
+  # Several servers behind a load balancer: replace both services with shared ones, e.g.
+  #   bolt_altcha.replay_pool:  { class: Symfony\Component\Cache\Adapter\RedisAdapter, … }
+  #   bolt_altcha.lock_factory: { class: Symfony\Component\Lock\LockFactory, arguments: ['@<redis lock store>'] }
+  bolt_altcha.replay_pool:
+    class: Symfony\Component\Cache\Adapter\FilesystemAdapter
+    arguments: ['replay', 0, '%kernel.project_dir%/var/data/bolt-altcha']
+
+  bolt_altcha.lock_factory:
+    class: Symfony\Component\Lock\LockFactory
+    arguments: ['@bolt_altcha.lock_store']
+
+  bolt_altcha.lock_store:
+    class: Symfony\Component\Lock\Store\FlockStore
+    arguments: ['%kernel.project_dir%/var/data/bolt-altcha/locks']
+
+  # Replaces the definition from services_bolt.yaml, which the kernel loads first.
+  Tomvondracek\Altcha\Challenge\ReplayStore:
+    autowire: true
+    arguments:
+      $pool: '@bolt_altcha.replay_pool'
+      $lockFactory: '@bolt_altcha.lock_factory'

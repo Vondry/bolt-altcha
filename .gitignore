@@ -10,3 +10,5 @@ appveyor.yml
 vendor/
 composer.lock
 var/
+.phpunit.result.cache
+node_modules/

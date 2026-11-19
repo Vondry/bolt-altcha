@@ -1,0 +1,27 @@
+# ALTCHA — português do Brasil (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (site oficial)'
+'Cancel': 'Cancelar'
+'Enter code': 'Digite o código'
+'Enter code you hear. Press Space to play audio.': 'Digite o código que você ouve. Pressione Espaço para reproduzir o áudio.'
+'To proceed, please enter the code from the image below.': 'Para prosseguir, digite o código da imagem abaixo.'
+'Verification failed. Try again later.': 'Falha na verificação. Por favor, tente novamente mais tarde.'
+'Verification expired. Try again.': 'Verificação expirada. Por favor, tente novamente.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Protegido por <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (site oficial, abre em uma nova aba)">ALTCHA</a>'
+'Get an audio challenge': 'Obter desafio de áudio'
+'I’m not a robot': 'Eu não sou um robô'
+'Loading...': 'Carregando...'
+'Reload': 'Recarregar'
+'Verify': 'Verificar'
+'Verification required!': 'Verificação necessária!'
+'Verified': 'Verificado'
+'Verifying...': 'Verificando...'
+'Verifying... please wait.': 'Verificando... por favor aguarde.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'A verificação de que você não é um robô falhou. Envie o formulário novamente.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Os arquivos do ALTCHA estão ausentes ou desatualizados: a verificação no login está desativada e os formulários protegidos podem não funcionar.'
+'Run on the server:': 'Execute no servidor:'

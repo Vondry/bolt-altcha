@@ -1,0 +1,27 @@
+# ALTCHA — magyar (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (hivatalos weboldal)'
+'Cancel': 'Mégse'
+'Enter code': 'Írja be a kódot'
+'Enter code you hear. Press Space to play audio.': 'Írja be a hallott kódot. Nyomja meg a Szóköz billentyűt a hang lejátszásához.'
+'To proceed, please enter the code from the image below.': 'A folytatáshoz, kérjük, adja meg az alábbi kép kódját.'
+'Verification failed. Try again later.': 'A hitelesítés nem sikerült. Próbáld meg később újra.'
+'Verification expired. Try again.': 'A hitelesítés lejárt. Próbáld újra.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Védve a következő által: <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (hivatalos weboldal, új lapon nyílik meg)">ALTCHA</a>'
+'Get an audio challenge': 'Hangalapú kihívás kérése'
+'I’m not a robot': 'Nem vagyok robot'
+'Loading...': 'Betöltés...'
+'Reload': 'Újratöltés'
+'Verify': 'Ellenőrzés'
+'Verification required!': 'Ellenőrzés szükséges!'
+'Verified': 'Ellenőrizve'
+'Verifying...': 'Ellenőrzés folyamatban...'
+'Verifying... please wait.': 'Ellenőrzés folyamatban... kérlek várj.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Nem sikerült ellenőrizni, hogy Ön nem robot. Kérjük, küldje el újra az űrlapot.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Az ALTCHA fájljai hiányoznak vagy elavultak: a bejelentkezési ellenőrzés ki van kapcsolva, és a védett űrlapok nem biztos, hogy működnek.'
+'Run on the server:': 'Futtassa a szerveren:'

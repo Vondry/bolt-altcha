@@ -1,0 +1,27 @@
+# ALTCHA — Ελληνικά (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (επίσημος ιστότοπος)'
+'Cancel': 'Ακύρωση'
+'Enter code': 'Εισαγάγετε κωδικό'
+'Enter code you hear. Press Space to play audio.': 'Εισαγάγετε τον κωδικό που ακούτε. Πατήστε Space για να παίξετε τον ήχο.'
+'To proceed, please enter the code from the image below.': 'Για να συνεχίσετε, εισάγετε τον κωδικό από την παρακάτω εικόνα.'
+'Verification failed. Try again later.': 'Η επαλήθευση απέτυχε. Δοκιμάστε ξανά αργότερα.'
+'Verification expired. Try again.': 'Η επαλήθευση έληξε. Δοκιμάστε ξανά.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Προστατεύεται από το <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (επίσημος ιστότοπος, ανοίγει σε νέα καρτέλα)">ALTCHA</a>'
+'Get an audio challenge': 'Λήψη ηχητικής δοκιμασίας'
+'I’m not a robot': 'Δεν είμαι ρομπότ'
+'Loading...': 'Φόρτωση...'
+'Reload': 'Επαναφόρτωση'
+'Verify': 'Επαλήθευση'
+'Verification required!': 'Απαιτείται έλεγχος!'
+'Verified': 'Επαληθεύτηκε'
+'Verifying...': 'Γίνεται επαλήθευση...'
+'Verifying... please wait.': 'Γίνεται επαλήθευση... παρακαλώ περιμένετε.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Ο έλεγχος ότι δεν είστε ρομπότ απέτυχε. Υποβάλετε ξανά τη φόρμα.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Τα αρχεία του ALTCHA λείπουν ή είναι παλιά: ο έλεγχος κατά τη σύνδεση είναι απενεργοποιημένος και οι προστατευμένες φόρμες ίσως δεν λειτουργούν.'
+'Run on the server:': 'Εκτελέστε στον διακομιστή:'

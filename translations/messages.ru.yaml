@@ -1,0 +1,4 @@
+# ALTCHA — русский (domain: messages). Themes and Bolt translate flash messages in this domain.
+
+# Flash message after a failed check on a protected route (on_route_failure: redirect_back)
+'The check that you are not a robot failed. Please submit the form again.': 'Проверка, что вы не робот, не пройдена. Отправьте форму ещё раз.'

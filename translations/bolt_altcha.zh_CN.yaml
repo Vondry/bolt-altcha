@@ -1,0 +1,27 @@
+# ALTCHA — 简体中文 (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (官方网站)'
+'Cancel': '取消'
+'Enter code': '输入代码'
+'Enter code you hear. Press Space to play audio.': '输入您听到的代码。按空格键播放音频。'
+'To proceed, please enter the code from the image below.': '为继续操作，请输入下图中显示的验证码。'
+'Verification failed. Try again later.': '验证失败。稍后再试。'
+'Verification expired. Try again.': '验证已过期。请重试。'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': '由 <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (官方网站，在新标签页中打开)">ALTCHA</a> 保护'
+'Get an audio challenge': '获取音频挑战'
+'I’m not a robot': '我不是机器人'
+'Loading...': '加载中...'
+'Reload': '重新加载'
+'Verify': '验证'
+'Verification required!': '需要验证！'
+'Verified': '已验证'
+'Verifying...': '正在验证...'
+'Verifying... please wait.': '正在验证... 请稍等。'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': '人机验证失败。请重新提交表单。'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'ALTCHA 的文件缺失或已过期：登录检查已关闭，受保护的表单可能无法使用。'
+'Run on the server:': '在服务器上运行：'

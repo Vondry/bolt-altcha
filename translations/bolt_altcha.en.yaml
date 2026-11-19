@@ -1,0 +1,27 @@
+# ALTCHA — English (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (official website)'
+'Cancel': 'Cancel'
+'Enter code': 'Enter code'
+'Enter code you hear. Press Space to play audio.': 'Enter code you hear. Press Space to play audio.'
+'To proceed, please enter the code from the image below.': 'To proceed, please enter the code from the image below.'
+'Verification failed. Try again later.': 'Verification failed. Try again later.'
+'Verification expired. Try again.': 'Verification expired. Try again.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>'
+'Get an audio challenge': 'Get an audio challenge'
+'I’m not a robot': 'I’m not a robot'
+'Loading...': 'Loading...'
+'Reload': 'Reload'
+'Verify': 'Verify'
+'Verification required!': 'Verification required!'
+'Verified': 'Verified'
+'Verifying...': 'Verifying...'
+'Verifying... please wait.': 'Verifying... please wait.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'The check that you are not a robot failed. Please submit the form again.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.'
+'Run on the server:': 'Run on the server:'

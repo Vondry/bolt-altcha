@@ -1,0 +1,27 @@
+# ALTCHA — čeština (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (oficiální web)'
+'Cancel': 'Zrušit'
+'Enter code': 'Zadejte kód'
+'Enter code you hear. Press Space to play audio.': 'Zadejte kód, který slyšíte. Stisknutím mezerníku přehrajete zvuk.'
+'To proceed, please enter the code from the image below.': 'Pro pokračování zadejte kód z obrázku níže.'
+'Verification failed. Try again later.': 'Ověření selhalo. Zkuste to prosím později.'
+'Verification expired. Try again.': 'Ověření vypršelo. Zkuste to prosím znovu.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Chráněno pomocí <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (oficiální web, otevře se na nové kartě)">ALTCHA</a>'
+'Get an audio challenge': 'Získat audio výzvu'
+'I’m not a robot': 'Nejsem robot'
+'Loading...': 'Načítání...'
+'Reload': 'Znovu načíst'
+'Verify': 'Ověřit'
+'Verification required!': 'Vyžaduje se ověření!'
+'Verified': 'Ověřeno'
+'Verifying...': 'Ověřování...'
+'Verifying... please wait.': 'Probíhá ověření... prosím počkejte.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Ověření, že nejste robot, se nezdařilo. Odešlete prosím formulář znovu.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Soubory ALTCHA chybí nebo jsou zastaralé: kontrola při přihlášení je vypnutá a chráněné formuláře nemusí fungovat.'
+'Run on the server:': 'Spusťte na serveru:'

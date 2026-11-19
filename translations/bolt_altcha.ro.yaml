@@ -1,0 +1,27 @@
+# ALTCHA — română (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (site oficial)'
+'Cancel': 'Anulare'
+'Enter code': 'Introduceți codul'
+'Enter code you hear. Press Space to play audio.': 'Introduceți codul pe care îl auziți. Apăsați Spațiu pentru a reda audio.'
+'To proceed, please enter the code from the image below.': 'Pentru a continua, vă rugăm să introduceți codul din imaginea de mai jos.'
+'Verification failed. Try again later.': 'Verificarea a eșuat. Încearcă din nou mai târziu.'
+'Verification expired. Try again.': 'Verificarea a expirat. Încearcă din nou.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Protejat de <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (site oficial, se deschide într-o filă nouă)">ALTCHA</a>'
+'Get an audio challenge': 'Obține o provocare audio'
+'I’m not a robot': 'Nu sunt un robot'
+'Loading...': 'Se încarcă...'
+'Reload': 'Reîncarcă'
+'Verify': 'Verifică'
+'Verification required!': 'Verificare necesară!'
+'Verified': 'Verificat'
+'Verifying...': 'Se verifică...'
+'Verifying... please wait.': 'Se verifică... te rugăm să aștepți.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Verificarea că nu sunteți un robot a eșuat. Vă rugăm să trimiteți din nou formularul.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Fișierele ALTCHA lipsesc sau sunt învechite: verificarea la autentificare este dezactivată, iar formularele protejate s-ar putea să nu funcționeze.'
+'Run on the server:': 'Rulați pe server:'

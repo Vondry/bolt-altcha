@@ -1,3 +1,6 @@
-reference_extension:
-  resource: '../../vendor/acmecorp/reference-extension/src/Controller/'
+# GET /altcha/challenge/{profile}, the widget's challenge endpoint. Copied to
+# config/routes/extension_bolt-altcha.yaml by `extensions:configure`, which the kernel loads before
+# config/routes.yaml, so the route wins over Bolt's own frontend routes.
+tomvondracek_altcha:
+  resource: '../../vendor/tomvondracek/bolt-altcha/src/Controller/'
   type: attribute

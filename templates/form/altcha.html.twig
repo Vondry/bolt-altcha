@@ -1,0 +1,16 @@
+{#
+    Form theme of the ALTCHA field (Tomvondracek\Altcha\Form\AltchaType). Registered for every form
+    in config/services.yaml (twig.form_themes). A template that sets its own themes with
+    `form_theme … only` must list it: with ['form_div_layout.html.twig', '@bolt-altcha/form/altcha.html.twig'] only
+#}
+{% block altcha_widget -%}
+    {#- Built by WidgetRenderer: every attribute is escaped there. -#}
+    {{- altcha_html|raw -}}
+{%- endblock altcha_widget %}
+
+{% block altcha_row -%}
+    <div class="altcha-row">
+        {{- form_widget(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock altcha_row %}

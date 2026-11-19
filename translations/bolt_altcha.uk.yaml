@@ -1,0 +1,27 @@
+# ALTCHA — українська (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (офіційний сайт)'
+'Cancel': 'Скасувати'
+'Enter code': 'Введіть код'
+'Enter code you hear. Press Space to play audio.': 'Введіть код, який ви чуєте. Натисніть пробіл, щоб відтворити аудіо.'
+'To proceed, please enter the code from the image below.': 'Щоб продовжити, введіть код із зображення нижче.'
+'Verification failed. Try again later.': 'Перевірка не вдалася. Спробуйте пізніше.'
+'Verification expired. Try again.': 'Перевірка прострочена. Спробуйте знову.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Захищено <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (офіційний сайт, відкриється в новій вкладці)">ALTCHA</a>'
+'Get an audio challenge': 'Отримати аудіо-челлендж'
+'I’m not a robot': 'Я не робот'
+'Loading...': 'Завантаження...'
+'Reload': 'Перезавантажити'
+'Verify': 'Перевірити'
+'Verification required!': 'Потрібна перевірка!'
+'Verified': 'Перевірено'
+'Verifying...': 'Перевіряється...'
+'Verifying... please wait.': 'Перевірка... будь ласка, зачекайте.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Перевірку, що ви не робот, не пройдено. Надішліть форму ще раз.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Файли ALTCHA відсутні або застарілі: перевірку під час входу вимкнено, захищені форми можуть не працювати.'
+'Run on the server:': 'Виконайте на сервері:'

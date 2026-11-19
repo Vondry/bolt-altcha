@@ -1,0 +1,4 @@
+# ALTCHA — 简体中文 (domain: messages). Themes and Bolt translate flash messages in this domain.
+
+# Flash message after a failed check on a protected route (on_route_failure: redirect_back)
+'The check that you are not a robot failed. Please submit the form again.': '人机验证失败。请重新提交表单。'

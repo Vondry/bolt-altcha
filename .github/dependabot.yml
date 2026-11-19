@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # The workflows pin actions to commit SHAs; this keeps the SHAs (and their version comments)
+  # current. One PR for all of them.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+
+  # A library: no composer.lock, so only widen the constraints when a release falls outside them
+  # (a new Symfony or altcha-org/altcha major), never raise the lower bounds.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: monthly
+    versioning-strategy: widen
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # The vendored ALTCHA widget. The PR only bumps package.json: finish it with
+  # `npm ci && npm run build`, bump WidgetRenderer::ASSETS_VERSION and commit assets/.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+      include: scope

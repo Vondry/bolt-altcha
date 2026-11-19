@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
+use Rector\Symfony\CodeQuality\Rector\Class_\EventSubscriberToAttributeRector;
 
 return RectorConfig::configure()
     ->withCache('./var/cache/rector', FileCacheStorage::class)
-    ->withPaths(['./src'])
+    ->withPaths(['./src', './tests'])
     ->withImportNames()
+    ->withSkip([
+        // getSubscribedEvents() lets the tests check the priorities against Symfony's own listeners.
+        EventSubscriberToAttributeRector::class,
+    ])
     ->withParallel(timeoutSeconds: 180, jobSize: 10)
     ->withPhpSets()
     ->withPreparedSets(
@@ -17,10 +22,6 @@ return RectorConfig::configure()
     )
     ->withComposerBased(
         twig: true,
-        doctrine: true,
         phpunit: true,
         symfony: true,
-    )
-    ->withSkip([
-        Rector\Symfony\CodeQuality\Rector\Class_\InlineClassRoutePrefixRector::class
-    ]);
+    );

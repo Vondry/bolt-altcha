@@ -1,0 +1,27 @@
+# ALTCHA — slovenčina (domain: bolt_altcha).
+
+# The widget (its texts from the ALTCHA widget's own translations)
+'Altcha (official website)': 'Altcha (oficiálna webová stránka)'
+'Cancel': 'Zrušiť'
+'Enter code': 'Zadajte kód'
+'Enter code you hear. Press Space to play audio.': 'Zadajte kód, ktorý počujete. Stlačením medzerníka prehráte zvuk.'
+'To proceed, please enter the code from the image below.': 'Na pokračovanie, prosím, zadajte kód z obrázka nižšie.'
+'Verification failed. Try again later.': 'Verifikácia zlyhala. Skúste to znova neskôr.'
+'Verification expired. Try again.': 'Verifikácia vypršala. Skúste to znova.'
+'Protected by <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (official website, opens in new tab)">ALTCHA</a>': 'Chránené <a href="https://altcha.org/" target="_blank" rel="noopener" aria-label="Altcha (oficiálna webová stránka, otvorí sa na novej karte)">ALTCHA</a>'
+'Get an audio challenge': 'Získať audio výzvu'
+'I’m not a robot': 'Nie som robot'
+'Loading...': 'Načítava sa...'
+'Reload': 'Obnoviť'
+'Verify': 'Verifikovať'
+'Verification required!': 'Vyžaduje sa overenie!'
+'Verified': 'Verifikované'
+'Verifying...': 'Prebieha verifikácia...'
+'Verifying... please wait.': 'Prebieha verifikácia... prosím čakajte.'
+
+# Form field error (Tomvondracek\Altcha\Form\AltchaType)
+'The check that you are not a robot failed. Please submit the form again.': 'Overenie, že nie ste robot, sa nepodarilo. Odošlite prosím formulár znova.'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
+'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Súbory ALTCHA chýbajú alebo sú zastarané: kontrola pri prihlásení je vypnutá a chránené formuláre nemusia fungovať.'
+'Run on the server:': 'Spustite na serveri:'

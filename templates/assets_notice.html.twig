@@ -1,0 +1,10 @@
+{# Dashboard notice of Tomvondracek\Altcha\Assets\AssetsNoticeWidget: the published widget is missing or outdated. #}
+<div class="card mb-4 border-warning">
+    <div class="card-header">
+        <i class="fas fa-shield-alt" aria-hidden="true"></i> ALTCHA
+    </div>
+    <div class="card-body">
+        <p>{{ 'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.'|trans({}, 'bolt_altcha') }}</p>
+        <p class="mb-0">{{ 'Run on the server:'|trans({}, 'bolt_altcha') }} <code>bin/console extensions:configure</code></p>
+    </div>
+</div>
