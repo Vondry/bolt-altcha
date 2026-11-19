@@ -47,7 +47,7 @@
     "require-dev": {
         "bolt/core": "^6.1.10",
         "phpstan/extension-installer": "1.4.3",
-        "phpstan/phpstan": "2.3.6",
+        "phpstan/phpstan": "2.3.7",
         "phpstan/phpstan-deprecation-rules": "2.0.5",
         "phpstan/phpstan-phpunit": "2.1.2",
         "phpstan/phpstan-strict-rules": "2.1.1",
