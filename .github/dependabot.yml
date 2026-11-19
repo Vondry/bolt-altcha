@@ -21,6 +21,14 @@ updates:
     schedule:
       interval: monthly
     versioning-strategy: widen
+    ignore:
+      # Bolt 6 runs on Symfony 6.4: widening one component to a newer major would let Composer
+      # mix it with an older FrameworkBundle. Revisit when Bolt moves to a new Symfony major.
+      - dependency-name: symfony/*
+        update-types: [ 'version-update:semver-major' ]
+      # PHPUnit 11 covers every supported PHP version; a range across majors only splits CI.
+      - dependency-name: phpunit/phpunit
+        update-types: [ 'version-update:semver-major' ]
     commit-message:
       prefix: chore
       include: scope
