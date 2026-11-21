@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomvondracek\Altcha\Tests\Controller;
 
 use AltchaOrg\Altcha\Challenge;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -60,6 +61,26 @@ final class ChallengeControllerTest extends TestCase
         self::assertTrue($limited->headers->hasCacheControlDirective('no-store'));
 
         self::assertSame(200, $controller('default', $this->request('192.0.2.2'))->getStatusCode(), 'another address has its own limit');
+    }
+
+    /**
+     * @return iterable<string, array{string|null, string}>
+     */
+    public static function rateLimitKeys(): iterable
+    {
+        yield 'IPv4' => ['192.0.2.1', '192.0.2.1'];
+        yield 'IPv6: its /64' => ['2001:db8:1:2:3:4:5:6', '2001:db8:1:2::/64'];
+        yield 'IPv6: written differently, same /64' => ['2001:0DB8:0001:0002:ffff::1', '2001:db8:1:2::/64'];
+        yield 'IPv6 loopback' => ['::1', '::/64'];
+        yield 'IPv4-mapped IPv6: the IPv4 address' => ['::ffff:192.0.2.1', '192.0.2.1'];
+        yield 'not an address' => ['unix-socket', 'unix-socket'];
+        yield 'no address' => [null, 'unknown'];
+    }
+
+    #[DataProvider('rateLimitKeys')]
+    public function testRateLimitCountsIpv4AddressesAndIpv6Networks(?string $clientIp, string $expected): void
+    {
+        self::assertSame($expected, ChallengeController::rateLimitKey($clientIp));
     }
 
     public function testRateLimitCanBeSwitchedOff(): void
