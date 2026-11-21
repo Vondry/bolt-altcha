@@ -34,7 +34,7 @@ final readonly class WidgetRenderer
      * Cache buster of the files in assets/altcha/: the widget version, plus a counter for changes
      * of bolt-altcha.js. Bump it whenever assets/ changes.
      */
-    public const ASSETS_VERSION = '3.6.0-2';
+    public const ASSETS_VERSION = '3.7.0-1';
 
     public const ASSETS_PATH = '/assets/altcha';
 

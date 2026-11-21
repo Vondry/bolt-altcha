@@ -6,6 +6,6 @@
     "build": "rm -rf assets/altcha/workers && mkdir -p assets/altcha/workers && cp node_modules/altcha/dist/external/altcha.min.js assets/altcha/altcha.js && cp node_modules/altcha/dist/external/altcha.css assets/altcha/altcha.css && cp node_modules/altcha/dist/workers/pbkdf2.js node_modules/altcha/dist/workers/sha.js assets/altcha/workers/ && cp node_modules/altcha/LICENSE.txt assets/altcha/LICENSE.txt"
   },
   "devDependencies": {
-    "altcha": "3.6.0"
+    "altcha": "3.7.0"
   }
 }
