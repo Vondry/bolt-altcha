@@ -25,3 +25,6 @@
 # Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
 'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Os ficheiros do ALTCHA estão em falta ou desatualizados: a verificação no início de sessão está desligada e os formulários protegidos podem não funcionar.'
 'Run on the server:': 'Execute no servidor:'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\ServicesNoticeWidget)
+'The ALTCHA service configuration is outdated.': 'A configuração de serviços do ALTCHA está desatualizada.'

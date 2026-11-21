@@ -9,6 +9,8 @@ use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem;
 use Tomvondracek\Altcha\Assets\AssetsNoticeWidget;
 use Tomvondracek\Altcha\Assets\AssetsStatus;
+use Tomvondracek\Altcha\Assets\ServicesNoticeWidget;
+use Tomvondracek\Altcha\Assets\ServicesStatus;
 use Tomvondracek\Altcha\Config\AltchaConfigLoader;
 use Tomvondracek\Altcha\Widget\LoginWidget;
 use Tomvondracek\Altcha\Widget\WidgetRenderer;
@@ -56,6 +58,10 @@ final class Extension extends BaseExtension
 
         if (! (new AssetsStatus($projectDir, $public))->isCurrent()) {
             $this->addWidget(new AssetsNoticeWidget());
+        }
+
+        if (ServicesStatus::isOutdated($projectDir)) {
+            $this->addWidget(new ServicesNoticeWidget());
         }
     }
 

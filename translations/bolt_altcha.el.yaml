@@ -25,3 +25,6 @@
 # Dashboard notice (Tomvondracek\Altcha\Assets\AssetsNoticeWidget)
 'The ALTCHA widget files are missing or outdated: the login check is switched off and protected forms may not work.': 'Τα αρχεία του ALTCHA λείπουν ή είναι παλιά: ο έλεγχος κατά τη σύνδεση είναι απενεργοποιημένος και οι προστατευμένες φόρμες ίσως δεν λειτουργούν.'
 'Run on the server:': 'Εκτελέστε στον διακομιστή:'
+
+# Dashboard notice (Tomvondracek\Altcha\Assets\ServicesNoticeWidget)
+'The ALTCHA service configuration is outdated.': 'Η ρύθμιση υπηρεσιών του ALTCHA είναι παλιά.'
