@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-21
+
+Security and durability fixes from a review of the login and password reset protection. No
+configuration changes are needed; run `bin/console extensions:configure` after updating, so the
+project's copy of config/services.yaml gets the new service definitions.
+
 ### Fixed
 
 - A replay store or lock that can't be created no longer takes the whole site down. A
@@ -86,6 +92,7 @@ configuration and its runtime requirements are unchanged.
   widget's texts are translated by Symfony and handed to the widget, so a project can reword
   them in its own translations/bolt_altcha.<locale>.yaml.
 
-[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Vondry/bolt-altcha/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Vondry/bolt-altcha/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Vondry/bolt-altcha/releases/tag/v1.0.0
