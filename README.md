@@ -21,7 +21,8 @@ pictures to click, no third-party request, no cookie. By default nothing is show
   instead of turning every form and the admin login into an error page; the cache warm-up (`cache:clear`) fails on the
   same mistakes, so a deploy catches them.
 - **Strict CSP friendly**: the widget, its workers and its translations are served from your site. Tested under
-  `Content-Security-Policy: default-src 'self'`.
+  `Content-Security-Policy: default-src 'self'`. With Trusted Types enforced (`require-trusted-types-for 'script'`),
+  allow the widget's policy: `trusted-types svelte-trusted-html`.
 
 ## Requirements
 
@@ -123,7 +124,8 @@ Put the widget into the form:
 
 Then have it checked in one of three ways:
 
-1. **By route name**, before the controller runs:
+1. **By route name**, before the firewall and the controller run, so it also covers the login route of an
+   authenticator (`form_login`, `json_login`, a custom one); Bolt's own `bolt_login` is protected with `bolt.login`:
    ```yaml
    routes:
      newsletter_subscribe: newsletter
@@ -173,7 +175,7 @@ challenge_rate_limit: 60      # challenges per minute and IP address; 0 = no lim
 
 challenge:                    # defaults of every profile, see "Difficulty"
   algorithm: PBKDF2/SHA-256   # PBKDF2/SHA-256|384|512, SHA-256|384|512
-  cost: 1000                  # 1–100000
+  cost: 1000                  # 1–10000
   counter_min: 1000           # 1–1000000
   counter_max: 5000
   key_length: 32              # even, 16–64
@@ -233,11 +235,17 @@ to English.
 The browser derives a key with `algorithm` and `cost` for every counter from 0 until it finds the secret one the server
 picked between `counter_min` and `counter_max`: on average `cost × (counter_min + counter_max) / 2` key derivations,
 split over several Web Workers. Measured with WebCrypto, one PBKDF2/SHA-256 derivation at `cost: 1000` takes about
-0.15 ms on a recent laptop, so the defaults cost about 0.5 s there and 1–2 s on a cheap phone. Raise the cost for forms
-that attract more bots, keep it low where visitors are on slow phones.
+0.15 ms on a recent laptop, so the defaults cost about 0.5 s there and 1–2 s on a cheap phone. For forms that attract
+more bots, raise the counters; keep them low where visitors are on slow phones.
 
-The server derives one key at `cost` per challenge it hands out (hence the limits above and the rate limit) and checks a
-solution with two HMACs, never with a key derivation.
+The widget counts from 0, but a solver written for the purpose can start at `counter_min`: a bot's average work is
+`cost × (counter_max − counter_min) / 2`. `counter_min` adds work for honest visitors only; the width of the range is
+what a bot pays.
+
+The server derives one key at `cost` per challenge it hands out and checks a solution with two HMACs, never with a key
+derivation. Measured with PHP 8.4, a challenge costs the server about 1.3 ms at `cost: 1000` (PBKDF2/SHA-256) and up to
+17 ms at the maximum `cost: 10000` (PBKDF2/SHA-512): no more than a page view. The counters cost the server nothing,
+so they, not the cost, are the way to more work for bots.
 
 ## What it does and doesn't do
 
@@ -249,17 +257,21 @@ solution with two HMACs, never with a key derivation.
 - Submissions are checked: requests whose real method or overridden method (`X-HTTP-Method-Override`, `_method`) is
   POST, PUT, PATCH or DELETE. A Symfony form submitted partly (PATCH, `submit($data, false)`) without its ALTCHA field
   fails as well.
-- A request is checked once: a route listed under `routes:` that also has `#[RequireAltcha]`, or a `forward()` to a
-  protected controller, doesn't check the same solution twice. With the attribute on a controller class and on an
-  action, the action's profile wins.
+- A request is checked once per profile: a route listed under `routes:` that also has `#[RequireAltcha]`, or a
+  `forward()` to a protected controller, doesn't check the same solution twice for the same profile. A check for
+  another profile fails: a solution for a cheap profile never satisfies a stricter one, so give a route checked twice
+  one profile. With the attribute on a controller class and on an action, the action's profile wins.
 - Every failure is logged at `notice` level with its status and profile, nothing else (no IP, no form data).
 
 ## Durability
 
 **Used solutions** are remembered until they expire, in `var/data/bolt-altcha` (outside `var/cache`, so `cache:clear`
 and Bolt's "Clear the cache" don't make them reusable), and the check-and-remember step runs under a file lock, so one
-solution sent in many parallel requests passes once. On **several servers** behind a load balancer, give both a shared
-store, e.g. Redis, by overriding the two services in `config/packages/extension_bolt-altcha.yaml`:
+solution sent in many parallel requests passes once (solutions share 256 locks, so the lock files stay few). On
+**several servers** behind a load balancer, give both a shared store, e.g. Redis, by overriding the two services in
+the project's own `config/services.yaml`, which the kernel loads after `config/packages/`. Not in
+`config/packages/extension_bolt-altcha.yaml`: `extensions:configure` overwrites that copy every time it runs, and
+Composer runs it on every update.
 
 ```yaml
 services:
@@ -278,27 +290,35 @@ handling, so the rest of the site never depends on them. While the store fails, 
 once: watch the log for these errors.
 
 **Mistakes don't take the site down.** The hooks that run on their own (the login check, fields added to Bolt's forms
-and to `forms:`, `routes:`, `#[RequireAltcha]`) switch off, logged as critical, while the config is invalid or no
-strong key is set. `cache:clear`/`cache:warmup` fails on the same mistakes, so deploys catch them. Code that uses the
-extension on purpose (`altcha_widget()`, `AltchaType` in your form, the `Verifier`) still throws, so you see the error.
+and to `forms:`, `routes:`, `#[RequireAltcha]`, the challenge endpoint) switch off, logged as critical, while the config
+is invalid, no strong key is set or the widget isn't published. Each problem is logged at most once every five minutes,
+so a broken setup doesn't turn into an alert per request. `cache:clear`/`cache:warmup` fails on an invalid config or
+a weak key, so deploys catch them; a web request that rebuilds the cache (after Bolt's "Clear the cache") doesn't, so
+it never fails a visitor's request. Code that uses the extension on purpose (`altcha_widget()`, `AltchaType` in your
+form, the `Verifier`) still throws, so you see the error.
 
 **A deploy that skipped `extensions:configure`** leaves the widget files missing or outdated
-(`public/assets/altcha/VERSION` tells which version is published). The dashboard then shows a notice, and the login
-check stands down (logged as critical) instead of locking every editor out. Run `bin/console extensions:configure`.
+(`public/assets/altcha/VERSION` tells which version is published), or an outdated copy of the extension's services
+(`config/packages/extension_bolt-altcha.yaml`). The dashboard then shows a notice. Without the widget files every
+automatic check stands down (logged as critical) instead of locking editors out of the login and the password reset.
+Run `bin/console extensions:configure`.
 
 To switch everything off in an emergency, put `enabled: false` into
 `config/extensions/tomvondracek-altcha_local.yaml`.
 
-The challenge endpoint answers `429` after `challenge_rate_limit` challenges a minute from one client: one IPv4
-address, or one IPv6 `/64` network (a single host usually owns a whole `/64`, so counting IPv6 addresses one by one
-would be no limit). Behind a reverse proxy, set Symfony's trusted proxies, or all visitors share the proxy's address
-and limit; trust only your proxies, or clients can claim any address in `X-Forwarded-For`.
+**The challenge endpoint never refuses a challenge.** After `challenge_rate_limit` challenges a minute from one client
+(one IPv4 address, or one IPv6 `/64` network: a single host usually owns a whole `/64`), its challenges are four times
+harder until it slows down. Clients that share an address (an office NAT, one IPv6 network, a proxy Symfony doesn't
+trust) share the limit, so refusing would let any one of them lock the others out of the login; this way bots pay more
+and people still get in. Behind a reverse proxy, set Symfony's trusted proxies, or all visitors share the proxy's
+address and limit (logged as a warning when it happens); trust only your proxies, or clients can claim any address in
+`X-Forwarded-For`. A rate limiter store that fails is logged and the challenge is handed out at its normal difficulty.
 
 ## Privacy
 
 The widget, its workers and the challenge endpoint (`/altcha/challenge/{profile}`) are on your site. ALTCHA sets no
 cookie and stores nothing in the browser. The extension stores a hash of each used challenge until it expires, and the
-rate limiter counts challenges per IP address for a minute in the application cache. Nothing for the cookie banner; the privacy policy may mention a self-hosted anti-spam check without personal
+rate limiter counts challenges per client (IPv4 address or IPv6 `/64`) for a minute in `var/cache`. Nothing for the cookie banner; the privacy policy may mention a self-hosted anti-spam check without personal
 data.
 
 ## Development
