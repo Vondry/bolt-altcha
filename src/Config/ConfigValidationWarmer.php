@@ -8,9 +8,14 @@ use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 use Tomvondracek\Altcha\Challenge\HmacKeyProvider;
 
 /**
- * Validates the configuration while the cache is warmed (`cache:clear`, `cache:warmup`, Bolt's
- * "Clear the cache"), and the signing key as soon as the config protects something, so a mistake
- * fails the deploy instead of quietly switching the protection off at runtime (Protection).
+ * Validates the configuration while `cache:clear` or `cache:warmup` warms the cache, and the
+ * signing key as soon as the config protects something, so a mistake fails the deploy instead of
+ * quietly switching the protection off at runtime (Protection).
+ *
+ * Optional: those commands run optional warmers, but a web request that rebuilds the container
+ * (after Bolt's "Clear the cache", which runs `cache:clear --no-warmup`, or a changed config file)
+ * doesn't. As a required warmer, it would turn that visitor's request into an error page, while
+ * every later request runs with the protection off anyway.
  *
  * The key is not checked while nothing is protected: right after `composer require`, on a site
  * that still has the placeholder APP_SECRET, Composer's `cache:clear` must not fail.
@@ -25,7 +30,7 @@ final readonly class ConfigValidationWarmer implements CacheWarmerInterface
 
     public function isOptional(): bool
     {
-        return false;
+        return true;
     }
 
     /**

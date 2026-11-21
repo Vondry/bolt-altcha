@@ -10,6 +10,7 @@ use Psr\Log\AbstractLogger;
 use stdClass;
 use Stringable;
 use Symfony\Component\HttpFoundation\Request;
+use Tomvondracek\Altcha\Exception\InvalidConfigurationException;
 use Tomvondracek\Altcha\Tests\AltchaTestTrait;
 use Tomvondracek\Altcha\Widget\WidgetRenderer;
 use Tomvondracek\Altcha\Widget\WidgetTexts;
@@ -286,6 +287,29 @@ final class WidgetRendererTest extends TestCase
      * Attribute names are written into the HTML as they are: a name with a space or `=` could add
      * an event handler.
      */
+    /**
+     * Without a strong key the challenge endpoint answers 404, so the widget could never be
+     * solved: a template or form that renders it on purpose shows the error. The login widget,
+     * rendered on its own, just stays empty (Protection is off).
+     */
+    public function testAWidgetWithoutAStrongKeyIsAnError(): void
+    {
+        $services = $this->services([
+            'profiles' => [
+                'login' => [],
+            ],
+            'bolt' => [
+                'login' => true,
+            ],
+        ], null, '!ChangeMe!');
+        $renderer = $this->widgetRenderer($services);
+
+        self::assertSame('', $renderer->renderLogin());
+
+        $this->expectException(InvalidConfigurationException::class);
+        $renderer->render('default');
+    }
+
     public function testInvalidAttributeNamesAreRejected(): void
     {
         foreach (['x onfocus=alert(1) autofocus', 'Display', '"x"', ''] as $name) {

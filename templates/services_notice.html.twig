@@ -1,0 +1,10 @@
+{# Dashboard notice of Tomvondracek\Altcha\Assets\ServicesNoticeWidget: the project's copy of the extension's services is outdated. #}
+<div class="card mb-4 border-warning">
+    <div class="card-header">
+        <i class="fas fa-shield-alt" aria-hidden="true"></i> ALTCHA
+    </div>
+    <div class="card-body">
+        <p>{{ 'The ALTCHA service configuration is outdated.'|trans({}, 'bolt_altcha') }} <code>config/packages/extension_bolt-altcha.yaml</code></p>
+        <p class="mb-0">{{ 'Run on the server:'|trans({}, 'bolt_altcha') }} <code>bin/console extensions:configure</code></p>
+    </div>
+</div>

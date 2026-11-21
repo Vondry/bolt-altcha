@@ -29,10 +29,12 @@ final readonly class ChallengeSettings
 
     /**
      * Creating a challenge derives one key at `cost` on the server, for every anonymous request to
-     * the challenge endpoint: the cost stays cheap enough for that (PBKDF2/SHA-256 at 100,000 is
-     * ~15 ms). The visitor's work is cost × counter.
+     * the challenge endpoint, which is never refused (ChallengeController): the cost stays as cheap
+     * as a page view. Measured with PHP 8.4: PBKDF2/SHA-256 ~1.3 ms at 1,000 and ~13 ms at 10,000,
+     * PBKDF2/SHA-512 ~17 ms at 10,000. The visitor's work is cost × counter: for more work, raise
+     * the counters, which cost the server nothing.
      */
-    public const MAX_COST = 100_000;
+    public const MAX_COST = 10_000;
 
     public const MAX_COUNTER = 1_000_000;
 

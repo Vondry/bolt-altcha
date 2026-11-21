@@ -105,6 +105,34 @@ final class GuardTest extends TestCase
         self::assertNull($guard->check($forwarded, 'default', $config), 'a sub-request of a checked request');
     }
 
+    /**
+     * A pass counts for its profile only: a solution for a cheap profile doesn't satisfy a
+     * stricter one, also not in a forwarded sub-request.
+     */
+    public function testAPassForOneProfileDoesNotSatisfyAnother(): void
+    {
+        $services = $this->services([
+            'profiles' => [
+                'strict' => [],
+            ],
+        ]);
+        $guard = $this->guard($services);
+        $config = $services->loader->load();
+        $request = Request::create('/newsletter', 'POST', [
+            'altcha' => $this->solvedPayload($services),
+        ]);
+        $this->requestStack->push($request);
+
+        self::assertNull($guard->check($request, 'default', $config));
+        self::assertNotNull($guard->check($request, 'strict', $config), 'the same request, a stricter profile');
+
+        $forwarded = $request->duplicate(attributes: [
+            '_controller' => 'strict',
+        ]);
+        $this->requestStack->push($forwarded);
+        self::assertNotNull($guard->check($forwarded, 'strict', $config), 'a sub-request for a stricter profile');
+    }
+
     public function testRejectAnswers403WithoutABody(): void
     {
         $services = $this->services([

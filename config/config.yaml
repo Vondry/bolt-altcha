@@ -29,7 +29,8 @@ field_name: altcha
 challenge:
   # PBKDF2/SHA-256, PBKDF2/SHA-384, PBKDF2/SHA-512, SHA-256, SHA-384 or SHA-512.
   algorithm: PBKDF2/SHA-256
-  # 1–100000. The server derives one key at this cost for every challenge it hands out.
+  # 1–10000. The server derives one key at this cost for every challenge it hands out (~1 ms at
+  # 1000). For more work, raise the counters: they cost the server nothing.
   cost: 1000
   # 1–1000000
   counter_min: 1000
@@ -101,7 +102,8 @@ routes: {}
 #   reject:        403 with an empty body
 on_route_failure: redirect_back
 
-# Challenges one client (an IPv4 address or an IPv6 /64) may fetch per minute from
-# /altcha/challenge/…; more get 429. Every widget on a page fetches one. 0 = no limit. Behind a
+# Challenges one client (an IPv4 address or an IPv6 /64) gets per minute from /altcha/challenge/…
+# at the profile's difficulty; more are four times harder (never refused, so visitors sharing an
+# address can't lock each other out). Every widget on a page fetches one. 0 = no limit. Behind a
 # reverse proxy, configure Symfony's trusted proxies, or all visitors share the proxy's address.
 challenge_rate_limit: 60

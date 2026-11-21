@@ -195,7 +195,7 @@ final class AltchaConfigTest extends TestCase
         yield 'key too long' => [['challenge' => ['key_length' => 65]], 'challenge.key_length'];
         yield 'expiry too short' => [['challenge' => ['expires' => 5]], 'challenge.expires'];
         yield 'expiry too long' => [['challenge' => ['expires' => 86_401]], 'challenge.expires'];
-        yield 'cost too high for the server' => [['challenge' => ['cost' => 100_001]], 'challenge.cost'];
+        yield 'cost too high for the server' => [['challenge' => ['cost' => 10_001]], 'challenge.cost'];
         yield 'counter too high' => [['challenge' => ['counter_max' => 1_000_001]], 'challenge.counter_max'];
         yield 'odd key length' => [['challenge' => ['key_length' => 17]], 'challenge.key_length'];
         yield 'negative rate limit' => [['challenge_rate_limit' => -1], 'challenge_rate_limit'];
@@ -213,6 +213,12 @@ final class AltchaConfigTest extends TestCase
         yield 'unknown profile for login' => [['bolt' => ['login' => 'strict']], 'bolt.login'];
         yield 'number as profile' => [['forms' => ['contact' => 1]], 'forms.contact'];
         yield 'unknown profile for a route' => [['routes' => ['subscribe' => 'nope']], 'routes.subscribe'];
+        yield 'Bolt\'s login under routes' => [['routes' => ['bolt_login' => true]], 'routes.bolt_login'];
+        // Maps become JSON in the page: caught here, not while the login page renders.
+        yield 'NaN in the widget configuration' => [['widget' => ['configuration' => ['floatingOffset' => NAN]]], 'widget.configuration'];
+        yield 'infinity in a profile\'s widget configuration' => [['profiles' => ['login' => ['widget' => ['configuration' => ['x' => INF]]]]], 'profiles.login.widget.configuration'];
+        yield 'binary bytes in the widget configuration' => [['widget' => ['configuration' => ['x' => "\xff\xfe"]]], 'widget.configuration'];
+        yield 'NaN as a widget attribute' => [['widget' => ['workers' => NAN]], 'widget.workers'];
         yield 'unknown failure mode' => [['on_route_failure' => 'ignore'], 'on_route_failure'];
     }
 

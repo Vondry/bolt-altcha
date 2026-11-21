@@ -163,7 +163,8 @@ final class TranslationsTest extends TestCase
 
         self::assertNotEmpty($messages);
 
-        return $messages;
+        // Several templates share a message (`Run on the server:`); the catalog has it once.
+        return array_values(array_unique($messages));
     }
 
     /**

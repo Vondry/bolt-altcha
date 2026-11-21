@@ -26,7 +26,8 @@ twig:
 services:
   # The used solutions (ReplayStore), in var/data: unlike the application cache, `cache:clear`
   # and Bolt's "Clear the cache" don't empty it, which would make solutions reusable again.
-  # Several servers behind a load balancer: replace both services with shared ones, e.g.
+  # Several servers behind a load balancer: replace both services with shared ones in the
+  # project's own config/services.yaml (this file is overwritten by `extensions:configure`), e.g.
   #   bolt_altcha.replay_pool:  { class: Symfony\Component\Cache\Adapter\RedisAdapter, … }
   #   bolt_altcha.lock_factory: { class: Symfony\Component\Lock\LockFactory, arguments: ['@<redis lock store>'] }
   bolt_altcha.replay_pool:
@@ -49,3 +50,16 @@ services:
     arguments:
       $pool: !service_closure '@bolt_altcha.replay_pool'
       $lockFactory: !service_closure '@bolt_altcha.lock_factory'
+
+  # The challenge rate limiter's counts, in var/cache (losing them is harmless), kept apart from
+  # the application cache so the controller can prune them.
+  bolt_altcha.rate_limit_pool:
+    class: Symfony\Component\Cache\Adapter\FilesystemAdapter
+    arguments: ['rate_limit', 0, '%kernel.cache_dir%/bolt-altcha']
+
+  # Replaces the definition from services_bolt.yaml, which the kernel loads first.
+  Tomvondracek\Altcha\Controller\ChallengeController:
+    autowire: true
+    autoconfigure: true
+    arguments:
+      $rateLimitCache: '@bolt_altcha.rate_limit_pool'

@@ -11,6 +11,7 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Service\ResetInterface;
 use Tomvondracek\Altcha\Exception\InvalidConfigurationException;
+use Tomvondracek\Altcha\Log\LogThrottle;
 
 /**
  * Loads the extension config for services (they can't use `BaseExtension::getConfig()`, which
@@ -24,9 +25,10 @@ use Tomvondracek\Altcha\Exception\InvalidConfigurationException;
  * Two ways to read it:
  *   - load(): throws on an invalid config. For code that uses the extension on purpose (a
  *     Twig function, the form field, the Verifier): the mistake must surface.
- *   - tryLoad(): logs the error once (critical) and returns null. For the hooks that run on every
- *     request (every form, every POST, the login page): one typo must not take down all forms and
- *     the admin login. ConfigValidationWarmer makes deploys fail on the same error instead.
+ *   - tryLoad(): logs the error once per request (critical; with a LogThrottle once per
+ *     LogThrottle::WINDOW) and returns null. For the hooks that run on every request (every form,
+ *     every POST, the login page): one typo must not take down all forms and the admin login.
+ *     ConfigValidationWarmer makes deploys fail on the same error instead.
  */
 final class AltchaConfigLoader implements ResetInterface
 {
@@ -39,6 +41,7 @@ final class AltchaConfigLoader implements ResetInterface
     public function __construct(
         private readonly Config $boltConfig,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly ?LogThrottle $logThrottle = null,
     ) {
     }
 
@@ -76,8 +79,13 @@ final class AltchaConfigLoader implements ResetInterface
         try {
             return $this->load();
         } catch (InvalidConfigurationException $exception) {
-            if (! $this->errorLogged) {
-                $this->errorLogged = true;
+            if ($this->errorLogged) {
+                return null;
+            }
+
+            $this->errorLogged = true;
+
+            if ($this->logThrottle?->allow('config.' . $exception->getMessage()) ?? true) {
                 $this->logger->critical('ALTCHA is not active, its configuration is invalid: {message}', [
                     'message' => $exception->getMessage(),
                     'exception' => $exception,

@@ -6,6 +6,57 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- One client could lock every editor out of the login: the challenge endpoint answered 429 to
+  everyone sharing the client's rate limit (all visitors behind a proxy Symfony doesn't trust, an
+  office NAT, one IPv6 network). It now never refuses: over `challenge_rate_limit`, a client's
+  challenges are four times harder (the counter range is multiplied) until it slows down. Requests
+  through an untrusted proxy are logged as a warning when they go over the limit, and a rate
+  limiter store that fails is logged and hands out normal challenges.
+- `routes:` didn't protect routes that an authenticator answers inside the firewall
+  (`form_login`, `json_login`, custom ones): the route guard ran after the firewall. It now runs
+  before it (priority 10). Bolt's `bolt_login` under `routes:` is rejected; `bolt.login` protects it.
+- A solution that passed one profile satisfied a check for another profile of the same request or
+  a forwarded sub-request, so a cheap profile could stand in for a stricter one. A pass now counts
+  for its own profile only.
+- Every accepted solution left a lock file in `var/data/bolt-altcha/locks` for good (Symfony's
+  `FlockStore` never deletes them). Solutions now share 256 locks. The files left by 1.0.2 can be
+  deleted.
+- Widget options YAML can hold but JSON can't (`.nan`, `.inf`, binary values) passed the config
+  check and made the login page fail while rendering. They are rejected with the other config errors.
+- The config check (`ConfigValidationWarmer`) ran when a web request rebuilt the cache, e.g. after
+  Bolt's "Clear the cache", and turned that visitor's request into an error page. It is now an
+  optional warmer: `cache:clear` and `cache:warmup` still run it, so deploys still fail on mistakes.
+- Without the published widget files (a deploy that skipped `extensions:configure`), only the login
+  check stood down: the password reset forms and `forms:` kept requiring a solution nobody could
+  produce. Every automatic check now stands down, logged as critical.
+
+### Changed
+
+- The maximum `cost` is 10,000 (was 100,000): creating a challenge at 100,000 took ~130–175 ms
+  of the server's CPU per anonymous request, not the documented ~15 ms. At 10,000 it is ~13–17 ms.
+  For more work, raise the counters, which cost the server nothing. A config with a higher `cost`
+  is now invalid: `cache:clear` reports it.
+- `critical` and `warning` lines about a misconfiguration are logged at most once every five
+  minutes, not once per request.
+- `altcha_widget()` and `AltchaType` throw without a strong signing key, instead of rendering a
+  widget whose challenge endpoint answers 404.
+- The challenge rate limiter keeps its counts in its own store in `var/cache/…/bolt-altcha`
+  (`bolt_altcha.rate_limit_pool`) and prunes expired ones.
+
+### Added
+
+- A dashboard notice while `config/packages/extension_bolt-altcha.yaml` is not the copy this
+  version ships, i.e. `extensions:configure` didn't run after an update.
+
+### Documentation
+
+- Override the replay store and lock in the project's own `config/services.yaml`:
+  `extensions:configure` overwrites `config/packages/extension_bolt-altcha.yaml` on every run.
+- `counter_min` adds work for honest visitors only; a Trusted Types policy needs
+  `trusted-types svelte-trusted-html`.
+
 ## [1.0.2] - 2026-11-21
 
 Security and durability fixes from a review of the login and password reset protection. No
