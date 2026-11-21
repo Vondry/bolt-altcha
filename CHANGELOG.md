@@ -6,6 +6,38 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- A replay store or lock that can't be created no longer takes the whole site down. A
+  `var/data/bolt-altcha` the web server can't write to (or an unreachable Redis store) made the
+  `FlockStore` throw while the container built the route guard and the form extension, so every
+  request failed, even with `enabled: false`. Both stores are now passed to `ReplayStore` as
+  service closures and created on first use, inside its error handling: the failure is logged as
+  an error, as the documentation promised. `ReplayStore` also catches errors (`Throwable`), not
+  only exceptions.
+- The challenge rate limit counts IPv6 clients by `/64` network instead of by address, which a
+  single host could rotate through. IPv4-mapped IPv6 addresses (`::ffff:a.b.c.d`) count as their
+  IPv4 address.
+- `redirect_back` sends the visitor to the path and query of a same-host `Referer`, as a relative
+  URL, instead of the `Referer` as given: a `Referer` such as `https://evil.example\@your.site/`
+  passed the same-host check (PHP's `parse_url()` reads the host as `your.site`) but browsers
+  would have followed it to `evil.example`. Real browsers never send such a `Referer`.
+
+### Changed
+
+- The login check also applies to every passport made by Bolt's `LoginFormAuthenticator` (also
+  behind Symfony's debug `TraceableAuthenticator`), not only to POSTs to the `bolt_login` route, so
+  a renamed or added Bolt login route stays covered.
+- A login page served over plain HTTP is logged as a warning: browsers solve the challenge only on
+  secure pages (Web Crypto), so nobody could log in.
+
+### Added
+
+- End-to-end tests: a Symfony kernel wired like a Bolt 6 site (the package's own
+  `config/services.yaml` and routes, Bolt's real `LoginFormAuthenticator` with CSRF and login
+  throttling, Bolt's real password reset form types) covering the login, the password reset forms,
+  the challenge endpoint, the route guard and a replay store that can't be created.
+
 ## [1.0.1] - 2026-11-19
 
 Maintenance release: development tools and CI are updated. The extension's code, its

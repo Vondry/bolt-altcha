@@ -94,13 +94,14 @@ forms: {}
 routes: {}
 
 # What a protected route answers to a request that fails:
-#   redirect_back: 303 back to the form (the Referer, same host only, else the homepage) with the
-#                  flash message "The check that you are not a robot failed. Please submit the
-#                  form again." (type `error`, translated in the `messages` domain)
+#   redirect_back: 303 back to the form (the Referer's path and query, same host only, else the
+#                  homepage) with the flash message "The check that you are not a robot failed.
+#                  Please submit the form again." (type `error`, translated in the `messages`
+#                  domain)
 #   reject:        403 with an empty body
 on_route_failure: redirect_back
 
-# Challenges one IP address may fetch per minute from /altcha/challenge/…; more get 429. Every
-# widget on a page fetches one. 0 = no limit. Behind a reverse proxy, configure Symfony's trusted
-# proxies, or all visitors share the proxy's address.
+# Challenges one client (an IPv4 address or an IPv6 /64) may fetch per minute from
+# /altcha/challenge/…; more get 429. Every widget on a page fetches one. 0 = no limit. Behind a
+# reverse proxy, configure Symfony's trusted proxies, or all visitors share the proxy's address.
 challenge_rate_limit: 60
