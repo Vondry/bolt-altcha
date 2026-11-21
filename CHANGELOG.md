@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- ALTCHA widget 3.7.0 (was 3.6.0). Its only change is two new options for which form fields
+  the widget sends to a `verifyUrl` (`serverVerificationFieldsSelector`,
+  `serverVerificationFieldNames`), with email fields now included by default. The extension never
+  sets `verifyUrl` or `serverVerificationFields` (challenges are verified on the site itself), so
+  nothing changes for it. Its styles, workers and texts are unchanged. Run
+  `bin/console extensions:configure` after updating to publish the new widget file
+  (`WidgetRenderer::ASSETS_VERSION` is `3.7.0-1`).
+
+### Development
+
+- The end-to-end tests run in their own CI job, on PHP 8.2 to 8.5. `phpunit.xml.dist` has a
+  `unit` and an `e2e` suite (`composer test:unit`, `composer test:e2e`); `vendor/bin/phpunit` runs
+  both.
+
 ## [1.0.3] - 2026-11-21
 
 Availability and check fixes from a second security review. After updating, run
