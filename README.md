@@ -325,11 +325,15 @@ data.
 
 ```bash
 composer install
-vendor/bin/phpunit
+vendor/bin/phpunit                     # both suites; `--testsuite unit` or `--testsuite e2e` for one
 vendor/bin/phpstan analyse
 vendor/bin/ecs check src tests
 vendor/bin/rector process -n
 ```
+
+The `e2e` suite (`tests/E2E/`) boots a Symfony kernel wired like a Bolt 6 site: the package's own `config/services.yaml`
+and routes, Bolt's `LoginFormAuthenticator` with CSRF and login throttling, and Bolt's password reset forms, driven
+with HTTP requests. CI runs it in its own job, on every supported PHP version.
 
 The widget is vendored in `assets/altcha/` from npm (`altcha`, version in `package.json`): its CSP-friendly external
 build and the PBKDF2 and SHA workers. `assets/altcha/bolt-altcha.js` is the extension's own loader. The widget's
