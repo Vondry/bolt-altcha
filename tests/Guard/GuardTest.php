@@ -131,7 +131,8 @@ final class GuardTest extends TestCase
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame(303, $response->getStatusCode());
-        self::assertSame('https://EXAMPLE.com/contact?x=1', $response->getTargetUrl());
+        // Its path and query only, relative: see RequestGuard::backUrl().
+        self::assertSame('/contact?x=1', $response->getTargetUrl());
         self::assertSame([RequestGuard::FLASH_MESSAGE], $session->getFlashBag()->get(RequestGuard::FLASH_TYPE));
         self::assertFalse($request->attributes->has(RequestGuard::VERIFIED));
     }
