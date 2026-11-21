@@ -27,6 +27,9 @@ pictures to click, no third-party request, no cookie. By default nothing is show
 
 - Bolt CMS `^6.0`, PHP `>=8.2`
 - Visitors' browsers with Web Crypto (every current browser). Without JavaScript a protected form can't be sent.
+- **HTTPS.** Browsers offer Web Crypto only on secure pages (HTTPS, or `localhost`): served over plain HTTP, the widget
+  can't solve its challenge and a protected form (the login too) can't be sent. A login page served over HTTP is
+  logged as a warning. Behind a proxy that terminates TLS, configure Symfony's trusted proxies.
 
 ## Installation
 
@@ -67,6 +70,9 @@ bolt:
 ```
 
 Each takes `false`, `true` (the profile of the same name, e.g. `login`, or `default`) or a profile name.
+
+The login check applies to every passport made by Bolt's `LoginFormAuthenticator` (whatever the route) and to every
+POST to `bolt_login`.
 
 | Form | Where the widget goes | How it's checked | On failure |
 |---|---|---|---|
@@ -141,7 +147,7 @@ Then have it checked in one of three ways:
    ```
 
 Routes and the attribute answer a failure as `on_route_failure` says: `redirect_back` (default) sends the visitor back
-to the form (the `Referer`, only on the same host, else the homepage) with a flash message of type `error`, translated
+to the form (the path and query of the `Referer`, only on the same host, else the homepage) with a flash message of type `error`, translated
 in the `messages` domain; `reject` answers `403` with an empty body. Only unsafe methods (POST, PUT, PATCH, DELETE) are checked.
 
 A form that posts straight to another service (a Mailchimp or Ecomail embed) can't be protected: its data never
@@ -266,7 +272,10 @@ services:
 ```
 
 A store or lock that fails (full disk, unwritable `var/data`, Redis down) is logged as an error and lets the solution
-through rather than locking visitors out.
+through rather than locking visitors out. That includes a store that can't even be created (`var/data/bolt-altcha`
+not writable by the web server, Redis unreachable): the extension creates both on first use, inside the same error
+handling, so the rest of the site never depends on them. While the store fails, a solution can be used more than
+once: watch the log for these errors.
 
 **Mistakes don't take the site down.** The hooks that run on their own (the login check, fields added to Bolt's forms
 and to `forms:`, `routes:`, `#[RequireAltcha]`) switch off, logged as critical, while the config is invalid or no
@@ -280,8 +289,10 @@ check stands down (logged as critical) instead of locking every editor out. Run 
 To switch everything off in an emergency, put `enabled: false` into
 `config/extensions/tomvondracek-altcha_local.yaml`.
 
-The challenge endpoint answers `429` after `challenge_rate_limit` challenges a minute from one IP address. Behind a
-reverse proxy, set Symfony's trusted proxies, or all visitors share the proxy's address and limit.
+The challenge endpoint answers `429` after `challenge_rate_limit` challenges a minute from one client: one IPv4
+address, or one IPv6 `/64` network (a single host usually owns a whole `/64`, so counting IPv6 addresses one by one
+would be no limit). Behind a reverse proxy, set Symfony's trusted proxies, or all visitors share the proxy's address
+and limit; trust only your proxies, or clients can claim any address in `X-Forwarded-For`.
 
 ## Privacy
 

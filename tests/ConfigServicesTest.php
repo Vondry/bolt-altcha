@@ -10,6 +10,7 @@ use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -82,7 +83,7 @@ final class ConfigServicesTest extends TestCase
 
     public function testServicesFileRegistersTemplatesFormThemeAndTranslations(): void
     {
-        $config = Yaml::parseFile(dirname(__DIR__) . '/config/services.yaml');
+        $config = Yaml::parseFile(dirname(__DIR__) . '/config/services.yaml', Yaml::PARSE_CUSTOM_TAGS);
         self::assertIsArray($config);
 
         self::assertSame([
@@ -152,19 +153,27 @@ final class ConfigServicesTest extends TestCase
         $container = $this->compile(true);
         $arguments = $container->getDefinition(ReplayStore::class)->getArguments();
 
-        // Used once, so the compiled container inlines both services.
-        $pool = $arguments[0] ?? null;
-        self::assertInstanceOf(Definition::class, $pool);
+        // Passed as closures, so a store that can't be created doesn't fail the services that
+        // depend on it (the route guard runs on every request).
+        $pool = self::closureTarget($container, $arguments[0] ?? null);
         self::assertSame(FilesystemAdapter::class, $pool->getClass());
         self::assertSame(dirname(__DIR__) . '/var/data/bolt-altcha', $container->getParameterBag()->resolveValue($pool->getArgument(2)));
         self::assertFalse($pool->hasTag('cache.pool'), 'not a pool cache:clear empties');
 
-        $lockFactory = $arguments[2] ?? null;
-        self::assertInstanceOf(Definition::class, $lockFactory);
+        $lockFactory = self::closureTarget($container, $arguments[2] ?? null);
         self::assertSame(LockFactory::class, $lockFactory->getClass());
         $lockStore = $lockFactory->getArgument(0);
         self::assertInstanceOf(Definition::class, $lockStore);
         self::assertSame(FlockStore::class, $lockStore->getClass());
+    }
+
+    private static function closureTarget(ContainerBuilder $container, mixed $argument): Definition
+    {
+        self::assertInstanceOf(ServiceClosureArgument::class, $argument);
+        $target = $argument->getValues()[0] ?? null;
+        self::assertInstanceOf(Reference::class, $target);
+
+        return $container->findDefinition((string) $target);
     }
 
     private function compile(bool $configured): ContainerBuilder

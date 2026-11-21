@@ -22,9 +22,10 @@ use Tomvondracek\Altcha\Config\Protection;
  * GET /altcha/challenge/{profile}: a fresh challenge for the widget. Outside the admin path, so
  * it is public for the login page as well. Never cached: every visitor gets a new challenge.
  *
- * Creating a challenge costs the server one key derivation, so an IP address may fetch
- * `challenge_rate_limit` challenges a minute (sliding window, default 60); more get 429. Behind a
- * reverse proxy, set Symfony's trusted proxies, or all visitors share the proxy's address.
+ * Creating a challenge costs the server one key derivation, so a client may fetch
+ * `challenge_rate_limit` challenges a minute (sliding window, default 60); more get 429. A client
+ * is an IPv4 address or an IPv6 /64 (see rateLimitKey()). Behind a reverse proxy, set Symfony's
+ * trusted proxies, or all visitors share the proxy's address.
  */
 #[AsController]
 final readonly class ChallengeController
@@ -62,7 +63,7 @@ final readonly class ChallengeController
                 'limit' => $config->challengeRateLimit,
                 'interval' => '1 minute',
             ], new CacheStorage($this->rateLimitCache)))
-                ->create($request->getClientIp() ?? 'unknown')
+                ->create(self::rateLimitKey($request->getClientIp()))
                 ->consume();
 
             if (! $limit->isAccepted()) {
@@ -73,6 +74,31 @@ final readonly class ChallengeController
         }
 
         return self::uncached(new JsonResponse($this->challengeFactory->create($settings)->toArray()));
+    }
+
+    /**
+     * Whom the rate limit counts: an IPv4 address, or the /64 network of an IPv6 address. One
+     * host usually gets a whole /64 (SLAAC, privacy addresses, any VPS), so a limit per IPv6
+     * address could be dodged by switching addresses. An IPv4-mapped IPv6 address (::ffff:a.b.c.d,
+     * from a dual-stack socket) is its IPv4 address: as a /64, every IPv4 client would share it.
+     */
+    public static function rateLimitKey(?string $clientIp): string
+    {
+        $packed = $clientIp === null ? false : @inet_pton($clientIp);
+        if ($packed === false) {
+            return $clientIp ?? 'unknown';
+        }
+
+        // Packed addresses are bytes: '8bit', so no character encoding applies.
+        if (mb_strlen($packed, '8bit') === 16) {
+            if (str_starts_with($packed, str_repeat("\0", 10) . "\xff\xff")) {
+                return (string) inet_ntop(mb_substr($packed, 12, null, '8bit'));
+            }
+
+            return inet_ntop(mb_substr($packed, 0, 8, '8bit') . str_repeat("\0", 8)) . '/64';
+        }
+
+        return (string) inet_ntop($packed);
     }
 
     private static function uncached(Response $response): Response

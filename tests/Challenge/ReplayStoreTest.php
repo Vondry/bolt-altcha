@@ -206,6 +206,58 @@ final class ReplayStoreTest extends TestCase
         self::assertSame(['error', 'error'], $logger->levels);
     }
 
+    /**
+     * config/services.yaml passes both stores as closures: a store that can't be created (a
+     * FlockStore on an unwritable directory, Redis unreachable) is logged like one that fails,
+     * instead of failing every service that depends on the ReplayStore.
+     */
+    public function testStoresThatCannotBeCreatedAreLoggedAndTheSolutionPasses(): void
+    {
+        $logger = self::levelLogger();
+        $store = new ReplayStore(
+            static fn (): never => throw new RuntimeException('Redis is down.'),
+            new MockClock(),
+            static fn (): never => throw new LockStorageException('The FlockStore directory is not writable.'),
+            $logger,
+        );
+
+        self::assertTrue($store->consume('signature', null));
+        self::assertSame(['error', 'error'], $logger->levels);
+    }
+
+    public function testStoresGivenAsClosuresAreCreatedOnceAndUsed(): void
+    {
+        $created = new ArrayObject();
+        $pool = new ArrayAdapter();
+        $store = new ReplayStore(
+            static function () use ($created, $pool): ArrayAdapter {
+                $created->append('pool');
+
+                return $pool;
+            },
+            new MockClock(),
+            static function () use ($created): LockFactory {
+                $created->append('lock');
+
+                return new LockFactory(new InMemoryStore());
+            },
+        );
+
+        self::assertTrue($store->consume('signature', null));
+        self::assertFalse($store->consume('signature', null));
+        self::assertTrue($pool->hasItem(ReplayStore::KEY_PREFIX . hash('sha256', 'signature')));
+        self::assertSame(['lock', 'pool'], $created->getArrayCopy());
+    }
+
+    public function testAClosureThatReturnsSomethingElseIsLogged(): void
+    {
+        $logger = self::levelLogger();
+        $store = new ReplayStore(static fn (): string => 'not a pool', new MockClock(), static fn (): string => 'not a factory', $logger);
+
+        self::assertTrue($store->consume('signature', null));
+        self::assertSame(['error', 'error'], $logger->levels);
+    }
+
     public function testFailingLockReleaseIsLoggedAsAWarning(): void
     {
         $lockStore = new class() implements PersistingStoreInterface {

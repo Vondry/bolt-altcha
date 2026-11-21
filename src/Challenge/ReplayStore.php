@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomvondracek\Altcha\Challenge;
 
-use Exception;
+use Closure;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -13,6 +13,8 @@ use Symfony\Component\Cache\PruneableInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\LockInterface;
+use Throwable;
+use UnexpectedValueException;
 
 /**
  * Makes every solved challenge usable once. A verified challenge is remembered (by a hash of its
@@ -27,9 +29,12 @@ use Symfony\Component\Lock\LockInterface;
  *   cache and no lock are used.
  * - A pool or lock that fails (full disk, unwritable directory, Redis down), by returning false or
  *   by throwing, is logged as an error; the solution still passes, so a broken store never locks
- *   visitors and editors out.
+ *   visitors and editors out. That includes a store that can't even be created: config/services.yaml
+ *   passes both as service closures, resolved here on first use, inside the same error handling.
+ *   Created eagerly, a FlockStore whose directory can't be written would throw while the container
+ *   builds this service, i.e. on every request (the route guard and the form extension need it).
  */
-final readonly class ReplayStore
+final class ReplayStore
 {
     /**
      * FrameworkBundle's application cache: always defined, also before `extensions:configure`.
@@ -49,12 +54,16 @@ final readonly class ReplayStore
      */
     private const PRUNE_EVERY = 200;
 
+    /**
+     * @param CacheItemPoolInterface|(Closure(): mixed) $pool        the pool, or a closure that returns it
+     * @param LockFactory|(Closure(): mixed)|null       $lockFactory the lock factory, or a closure that returns it
+     */
     public function __construct(
         #[Autowire(service: self::POOL)]
-        private CacheItemPoolInterface $pool,
-        private ClockInterface $clock,
-        private ?LockFactory $lockFactory = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private CacheItemPoolInterface|Closure $pool,
+        private readonly ClockInterface $clock,
+        private LockFactory|Closure|null $lockFactory = null,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
     }
 
@@ -65,9 +74,11 @@ final readonly class ReplayStore
     {
         $key = self::KEY_PREFIX . hash('sha256', $signature);
         $lock = $this->acquireLock($key);
+        $pool = null;
 
         try {
-            $item = $this->pool->getItem($key);
+            $pool = $this->pool();
+            $item = $pool->getItem($key);
             if ($item->isHit()) {
                 return false;
             }
@@ -78,14 +89,14 @@ final readonly class ReplayStore
 
             $item->set(true);
             $item->expiresAfter(max(1, $ttl) + self::GRACE_SECONDS);
-            if (! $this->pool->save($item)) {
+            if (! $pool->save($item)) {
                 $this->logger->error('ALTCHA could not remember a used solution: the replay store ({pool}) failed to save. Solutions can be reused until it works again.', [
-                    'pool' => get_debug_type($this->pool),
+                    'pool' => get_debug_type($pool),
                 ]);
             }
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('ALTCHA could not check or remember a used solution: the replay store ({pool}) failed: {message} Solutions can be reused until it works again.', [
-                'pool' => get_debug_type($this->pool),
+                'pool' => $pool === null ? 'bolt_altcha.replay_pool' : get_debug_type($pool),
                 'message' => $exception->getMessage(),
                 'exception' => $exception,
             ]);
@@ -93,12 +104,12 @@ final readonly class ReplayStore
             $this->releaseLock($lock);
         }
 
-        if ($this->pool instanceof PruneableInterface && random_int(1, self::PRUNE_EVERY) === 1) {
+        if ($pool instanceof PruneableInterface && random_int(1, self::PRUNE_EVERY) === 1) {
             try {
-                $this->pool->prune();
-            } catch (Exception $exception) {
+                $pool->prune();
+            } catch (Throwable $exception) {
                 $this->logger->warning('ALTCHA could not prune the replay store ({pool}): {message}', [
-                    'pool' => get_debug_type($this->pool),
+                    'pool' => get_debug_type($pool),
                     'message' => $exception->getMessage(),
                     'exception' => $exception,
                 ]);
@@ -109,8 +120,27 @@ final readonly class ReplayStore
     }
 
     /**
-     * The lock for the key, or null without a lock factory or when the lock store fails; the
-     * check then runs unlocked rather than failing the request.
+     * The pool, created on first use when it was given as a closure.
+     *
+     * @throws Throwable when it can't be created
+     */
+    private function pool(): CacheItemPoolInterface
+    {
+        if ($this->pool instanceof Closure) {
+            $pool = ($this->pool)();
+            if (! $pool instanceof CacheItemPoolInterface) {
+                throw new UnexpectedValueException(sprintf('The ALTCHA replay pool must be a %s, got %s.', CacheItemPoolInterface::class, get_debug_type($pool)));
+            }
+
+            $this->pool = $pool;
+        }
+
+        return $this->pool;
+    }
+
+    /**
+     * The lock for the key, or null without a lock factory or when the lock store fails (also
+     * when it can't be created); the check then runs unlocked rather than failing the request.
      */
     private function acquireLock(string $key): ?LockInterface
     {
@@ -119,13 +149,22 @@ final readonly class ReplayStore
         }
 
         try {
+            if ($this->lockFactory instanceof Closure) {
+                $lockFactory = ($this->lockFactory)();
+                if (! $lockFactory instanceof LockFactory) {
+                    throw new UnexpectedValueException(sprintf('The ALTCHA lock factory must be a %s, got %s.', LockFactory::class, get_debug_type($lockFactory)));
+                }
+
+                $this->lockFactory = $lockFactory;
+            }
+
             // Released in consume(); no auto-release, so a failed release isn't retried, and
             // thrown, from the destructor.
             $lock = $this->lockFactory->createLock($key, 30, false);
             $lock->acquire(true);
 
             return $lock;
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->error('ALTCHA could not lock the replay store: {message} Parallel requests with the same solution may pass more than once until it works again.', [
                 'message' => $exception->getMessage(),
                 'exception' => $exception,
@@ -142,7 +181,7 @@ final readonly class ReplayStore
     {
         try {
             $lock?->release();
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             $this->logger->warning('ALTCHA could not release a replay store lock: {message}', [
                 'message' => $exception->getMessage(),
                 'exception' => $exception,

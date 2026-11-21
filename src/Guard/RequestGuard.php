@@ -17,8 +17,9 @@ use Tomvondracek\Altcha\Verification\Verifier;
  * Verifies a request to a protected route (`routes:` in the config, or #[RequireAltcha]) and
  * builds the answer to one that fails, per `on_route_failure`:
  *   - `reject`: 403 with an empty body;
- *   - `redirect_back`: 303 to the Referer when it is on the same host (no open redirect), else to
- *     the homepage, with the flash message FLASH_MESSAGE (a message id, type `error`).
+ *   - `redirect_back`: 303 to the Referer's path and query when it is on the same host (no open
+ *     redirect, see backUrl()), else to the homepage, with the flash message FLASH_MESSAGE (a
+ *     message id, type `error`).
  *
  * Only submissions are checked: requests whose real HTTP method or overridden method
  * (X-HTTP-Method-Override, `_method`) is unsafe. A POST that claims to be a GET is still checked.
@@ -95,6 +96,14 @@ final readonly class RequestGuard
             || ($this->requestStack->getMainRequest()?->attributes->has(self::VERIFIED) ?? false);
     }
 
+    /**
+     * The Referer's path and query when it is a page of this host, else the homepage. Only the
+     * path and query are used, as a relative URL, never the Referer as given: browsers read some
+     * URLs differently from parse_url(), e.g. `https://evil.example\@this.site/` goes to
+     * evil.example. A path that starts with `//` or `/\` would be another host as well, hence the
+     * single leading slash. (parse_url() replaces control characters with `_`, so a tab browsers
+     * would drop can't join two slashes either.)
+     */
     private function backUrl(Request $request): string
     {
         $referer = $request->headers->get('referer');
@@ -107,7 +116,9 @@ final readonly class RequestGuard
                 && isset($parts['host'])
                 && strcasecmp($parts['host'], $request->getHost()) === 0
             ) {
-                return $referer;
+                $path = '/' . ltrim($parts['path'] ?? '', '/\\');
+
+                return isset($parts['query']) ? $path . '?' . $parts['query'] : $path;
             }
         }
 
