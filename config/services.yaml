@@ -41,9 +41,11 @@ services:
     class: Symfony\Component\Lock\Store\FlockStore
     arguments: ['%kernel.project_dir%/var/data/bolt-altcha/locks']
 
-  # Replaces the definition from services_bolt.yaml, which the kernel loads first.
+  # Replaces the definition from services_bolt.yaml, which the kernel loads first. Both stores are
+  # passed as closures, created on first use: a store that can't be created (unwritable var/data,
+  # Redis down) is then logged as an error instead of breaking every request.
   Tomvondracek\Altcha\Challenge\ReplayStore:
     autowire: true
     arguments:
-      $pool: '@bolt_altcha.replay_pool'
-      $lockFactory: '@bolt_altcha.lock_factory'
+      $pool: !service_closure '@bolt_altcha.replay_pool'
+      $lockFactory: !service_closure '@bolt_altcha.lock_factory'
