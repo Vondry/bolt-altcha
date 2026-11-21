@@ -69,7 +69,9 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

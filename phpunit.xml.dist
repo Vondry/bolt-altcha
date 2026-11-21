@@ -11,9 +11,15 @@
          failOnDeprecation="true"
          failOnPhpunitDeprecation="true"
          beStrictAboutOutputDuringTests="true">
+    <!-- vendor/bin/phpunit runs both suites; CI runs each one in its own job. -->
     <testsuites>
-        <testsuite name="bolt-altcha">
+        <testsuite name="unit">
             <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
+        </testsuite>
+        <!-- A Symfony kernel wired like a Bolt 6 site: real firewall, forms and HTTP requests. -->
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
     <source>

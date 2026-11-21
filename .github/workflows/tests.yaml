@@ -47,7 +47,40 @@ jobs:
       # No composer.lock: this resolves the newest altcha-org/altcha 2.x release.
       - run: composer install --no-progress --no-interaction
 
-      - run: vendor/bin/phpunit --colors=always
+      - run: vendor/bin/phpunit --colors=always --testsuite unit
+
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ '8.2', '8.3', '8.4', '8.5' ]
+
+    # tests/E2E: a Symfony kernel wired like a Bolt 6 site (the package's config/services.yaml and
+    # routes, Bolt's LoginFormAuthenticator with CSRF and login throttling, Bolt's password reset
+    # forms), driven with HTTP requests.
+    name: E2E - PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@646d67006f80c82cad8647c0f2656f7291b473e7 # v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: json, mbstring, pdo, curl, pdo_sqlite
+          coverage: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.COMPOSER_CACHE_DIR }}
+          key: ${{ runner.os }}-${{ matrix.php-version }}-${{ hashFiles('**/composer.json') }}
+
+      - run: composer install --no-progress --no-interaction
+
+      - run: vendor/bin/phpunit --colors=always --testsuite e2e
 
   coverage:
     name: Coverage
@@ -76,6 +109,7 @@ jobs:
 
       - run: composer install --no-progress --no-interaction
 
+      # Both suites: the end-to-end tests cover the Symfony and Bolt wiring the unit tests don't.
       - run: vendor/bin/phpunit --colors=always --coverage-text --coverage-clover=var/coverage.xml
 
       - name: Check minimum coverage
