@@ -21,7 +21,8 @@ use UnexpectedValueException;
  * signature) until it expires; after that the library rejects it as expired anyway.
  *
  * - The check and the write are one step under a lock, so a solution sent in many parallel
- *   requests passes once.
+ *   requests passes once. Solutions share 256 locks (LOCK_BUCKET_CHARS), so the lock files stay
+ *   few.
  * - Where it is stored is the pool `bolt_altcha.replay_pool` (config/services.yaml): files in
  *   var/data/bolt-altcha, which survive `cache:clear`. On several servers behind a load balancer,
  *   point the pool and `bolt_altcha.lock_factory` at a shared store (Redis), or every server keeps
@@ -49,6 +50,14 @@ final class ReplayStore
     private const GRACE_SECONDS = 60;
 
     /**
+     * The lock covers the solutions whose hash starts with the same this many hex characters: 256
+     * locks in all. A FlockStore never deletes its lock files, so a lock per solution would leave a
+     * file behind for every solution ever accepted. Two solutions sharing a lock only wait for
+     * each other's cache read and write.
+     */
+    private const LOCK_BUCKET_CHARS = 2;
+
+    /**
      * Expired entries are removed on about one save in this many (a filesystem pool keeps them
      * otherwise).
      */
@@ -72,8 +81,9 @@ final class ReplayStore
      */
     public function consume(string $signature, int|float|null $expiresAt): bool
     {
-        $key = self::KEY_PREFIX . hash('sha256', $signature);
-        $lock = $this->acquireLock($key);
+        $hash = hash('sha256', $signature);
+        $key = self::KEY_PREFIX . $hash;
+        $lock = $this->acquireLock(self::KEY_PREFIX . 'lock.' . mb_substr($hash, 0, self::LOCK_BUCKET_CHARS));
         $pool = null;
 
         try {

@@ -12,10 +12,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Tomvondracek\Altcha\Assets\AssetsStatus;
+use Tomvondracek\Altcha\Challenge\HmacKeyProvider;
 use Tomvondracek\Altcha\Config\AltchaConfig;
 use Tomvondracek\Altcha\Config\AltchaConfigLoader;
 use Tomvondracek\Altcha\Config\Protection;
 use Tomvondracek\Altcha\Controller\ChallengeController;
+use Tomvondracek\Altcha\Log\LogThrottle;
 
 /**
  * Renders `<altcha-widget>` for a profile, and the widget's stylesheet and scripts once per page.
@@ -62,12 +64,19 @@ final readonly class WidgetRenderer
         private Protection $protection,
         private AssetsStatus $assets,
         private LoggerInterface $logger = new NullLogger(),
+        private ?HmacKeyProvider $keys = null,
+        private ?LogThrottle $logThrottle = null,
     ) {
     }
 
     /**
      * The widget for `$profile`, preceded by the scripts if this page hasn't printed them yet.
      * Empty when the extension is disabled.
+     *
+     * Throws on an invalid config and without a strong signing key: the challenge endpoint
+     * answers 404 then, so the widget could never be solved. The automatic hooks (the login widget,
+     * fields added to configured forms) don't get here then (Protection); a template or form that
+     * uses the widget on purpose shows the error.
      *
      * @param array<array-key, mixed> $attributes widget attributes, merged over the profile's
      * @param string|null             $fieldName  name of the hidden input with the solution;
@@ -79,6 +88,8 @@ final readonly class WidgetRenderer
         if (! $config->enabled) {
             return '';
         }
+
+        $this->keys?->assertUsable();
 
         $settings = $config->profile($profile) ?? throw new InvalidArgumentException(sprintf(
             'Unknown ALTCHA profile "%s". Define it under `profiles` in tomvondracek-altcha.yaml.',
@@ -117,7 +128,7 @@ final readonly class WidgetRenderer
         }
 
         $request = $this->requestStack->getMainRequest();
-        if ($request !== null && ! self::isSecureContext($request)) {
+        if ($request !== null && ! self::isSecureContext($request) && ($this->logThrottle?->allow('login.plain_http') ?? true)) {
             $this->logger->warning('ALTCHA protects the login, but the login page was served over plain HTTP ({host}). Browsers solve the challenge only on HTTPS pages (and on localhost): if they really load it over HTTP, nobody can log in. Serve the site over HTTPS; behind a proxy that terminates TLS, configure Symfony\'s trusted proxies.', [
                 'host' => $request->getHost(),
             ]);

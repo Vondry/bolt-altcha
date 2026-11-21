@@ -12,14 +12,17 @@ use Tomvondracek\Altcha\Config\Protection;
 /**
  * Protects the routes under `routes:` in the config: a submission (see
  * RequestGuard::isSubmission()) to one of them needs a valid solution in the field `field_name`,
- * before its controller runs.
+ * before the firewall and the controller run. Also a login route of an authenticator, except
+ * Bolt's `bolt_login`, which `bolt.login` protects (AltchaConfig rejects it under `routes:`).
  */
 final readonly class RouteGuardSubscriber implements EventSubscriberInterface
 {
     /**
-     * After the router (32) has set `_route` and the firewall (8) has run.
+     * After the router (32) has set `_route` and the session is available (128), before the
+     * firewall (8): authenticators (`form_login`, `json_login`, custom ones) answer the POST to
+     * their route inside the firewall, so a guard after it would never see those submissions.
      */
-    public const PRIORITY = 0;
+    public const PRIORITY = 10;
 
     public function __construct(
         private Protection $protection,

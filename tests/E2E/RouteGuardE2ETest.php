@@ -6,6 +6,7 @@ namespace Tomvondracek\Altcha\Tests\E2E;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
+use Tomvondracek\Altcha\Tests\E2E\App\TestUserRepository;
 
 /**
  * A hand-written form protected under `routes:`: a failed submission goes back to the form
@@ -62,6 +63,32 @@ final class RouteGuardE2ETest extends E2ETestCase
 
         self::assertSame(Response::HTTP_SEE_OTHER, $response->getStatusCode());
         self::assertSame($expected, $response->headers->get('Location'));
+    }
+
+    /**
+     * The login of an authenticator (here `form_login`) answers its POST inside the firewall: the
+     * guard runs before it, so `routes:` protects it too.
+     */
+    public function testALoginRouteOfAnAuthenticatorIsProtected(): void
+    {
+        $this->bootSite([
+            'routes' => [
+                'member_login_check' => true,
+            ],
+            'on_route_failure' => 'reject',
+        ]);
+        $credentials = [
+            '_username' => TestUserRepository::USERNAME,
+            '_password' => TestUserRepository::PASSWORD,
+        ];
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $this->request('POST', '/member/login-check', $credentials)->getStatusCode());
+
+        $response = $this->request('POST', '/member/login-check', $credentials + [
+            'altcha' => $this->solution('default'),
+        ]);
+        self::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
+        self::assertStringNotContainsString('/member/login', (string) $response->headers->get('Location'), 'logged in');
     }
 
     public function testRejectAnswers403(): void

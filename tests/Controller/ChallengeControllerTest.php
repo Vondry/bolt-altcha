@@ -4,22 +4,41 @@ declare(strict_types=1);
 
 namespace Tomvondracek\Altcha\Tests\Controller;
 
+use AltchaOrg\Altcha\Altcha;
 use AltchaOrg\Altcha\Challenge;
+use AltchaOrg\Altcha\SolveChallengeOptions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Log\AbstractLogger;
 use ReflectionMethod;
+use RuntimeException;
+use Stringable;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Tomvondracek\Altcha\Challenge\Algorithms;
 use Tomvondracek\Altcha\Config\Profile;
 use Tomvondracek\Altcha\Controller\ChallengeController;
+use Tomvondracek\Altcha\Log\LogThrottle;
 use Tomvondracek\Altcha\Tests\AltchaServices;
 use Tomvondracek\Altcha\Tests\AltchaTestTrait;
 
 final class ChallengeControllerTest extends TestCase
 {
     use AltchaTestTrait;
+
+    /**
+     * A narrow counter range, so a challenge's difficulty shows in its counter.
+     */
+    private const NARROW = [
+        'challenge' => [
+            'counter_min' => 10,
+            'counter_max' => 12,
+        ],
+    ];
 
     public function testReturnsAFreshUncachedChallenge(): void
     {
@@ -45,22 +64,69 @@ final class ChallengeControllerTest extends TestCase
         self::assertTrue($services->verifier->verify(self::solve($challenge), 'default')->isValid());
     }
 
-    public function testAnIpAddressGetsALimitedNumberOfChallengesAMinute(): void
+    /**
+     * Over the limit a client is never refused (clients behind one address share the limit, and a
+     * refusal would lock them all out): its challenges get harder instead.
+     */
+    public function testOverTheLimitChallengesGetHarderInsteadOfRefused(): void
     {
-        $controller = $this->controller($this->services([
+        $services = $this->services(self::NARROW + [
             'challenge_rate_limit' => 3,
-        ]));
+        ]);
+        $controller = $this->controller($services);
 
         for ($i = 0; $i < 3; ++$i) {
-            self::assertSame(200, $controller('default', $this->request('192.0.2.1'))->getStatusCode());
+            self::assertCounterBetween(10, 12, $controller('default', $this->request('192.0.2.1')));
         }
 
-        $limited = $controller('default', $this->request('192.0.2.1'));
-        self::assertSame(429, $limited->getStatusCode());
-        self::assertGreaterThan(0, (int) $limited->headers->get('Retry-After'));
-        self::assertTrue($limited->headers->hasCacheControlDirective('no-store'));
+        $harder = $controller('default', $this->request('192.0.2.1'));
+        self::assertSame(200, $harder->getStatusCode());
+        self::assertTrue($harder->headers->hasCacheControlDirective('no-store'));
+        self::assertCounterBetween(10 * ChallengeController::HARDER, 12 * ChallengeController::HARDER, $harder);
+        self::assertTrue($services->verifier->verify(self::solve(self::challenge($harder)), 'default')->isValid(), 'a harder challenge still verifies');
 
-        self::assertSame(200, $controller('default', $this->request('192.0.2.2'))->getStatusCode(), 'another address has its own limit');
+        self::assertCounterBetween(10, 12, $controller('default', $this->request('192.0.2.2')), 'another address has its own limit');
+    }
+
+    public function testAFailingRateLimiterStoreHandsOutNormalChallengesAndIsLogged(): void
+    {
+        $pool = self::createStub(CacheItemPoolInterface::class);
+        $pool->method('getItem')
+            ->willThrowException(new RuntimeException('Redis is down.'));
+        $logger = self::levelLogger();
+        $services = $this->services(self::NARROW);
+        $controller = new ChallengeController($services->protection, $services->factory, $pool, $logger);
+
+        self::assertCounterBetween(10, 12, $controller('default', $this->request()));
+        self::assertSame(['error'], $logger->levels);
+    }
+
+    /**
+     * Requests through a proxy Symfony doesn't trust share its address, and so its limit: logged
+     * when that matters (over the limit), at most once per LogThrottle::WINDOW.
+     */
+    public function testOverTheLimitThroughAnUntrustedProxyIsLoggedOnce(): void
+    {
+        $logger = self::levelLogger();
+        $services = $this->services(self::NARROW + [
+            'challenge_rate_limit' => 1,
+        ]);
+        $controller = new ChallengeController($services->protection, $services->factory, new ArrayAdapter(), $logger, new LogThrottle(new ArrayAdapter()));
+        $proxied = static function (): Request {
+            $request = Request::create('/altcha/challenge/default', server: [
+                'REMOTE_ADDR' => '10.0.0.1',
+            ]);
+            $request->headers->set('X-Forwarded-For', '198.51.100.7');
+
+            return $request;
+        };
+
+        $controller('default', $proxied());
+        self::assertSame([], $logger->levels, 'under the limit: nothing to say');
+
+        $controller('default', $proxied());
+        $controller('default', $proxied());
+        self::assertSame(['warning'], $logger->levels);
     }
 
     /**
@@ -129,6 +195,47 @@ final class ChallengeControllerTest extends TestCase
             ],
             'methods' => ['GET'],
         ], $arguments);
+    }
+
+    private static function challenge(Response $response): Challenge
+    {
+        $data = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($data);
+
+        /** @var array<string, mixed> $data */
+        return Challenge::fromArray($data);
+    }
+
+    /**
+     * The secret counter, found the way the widget finds it.
+     */
+    private static function assertCounterBetween(int $min, int $max, Response $response, string $message = ''): void
+    {
+        self::assertSame(200, $response->getStatusCode(), $message);
+        $challenge = self::challenge($response);
+        $solution = (new Altcha())->solveChallenge(new SolveChallengeOptions(
+            algorithm: Algorithms::create($challenge->parameters->algorithm),
+            challenge: $challenge,
+        ));
+        self::assertNotNull($solution, $message);
+        self::assertGreaterThanOrEqual($min, $solution->counter, $message);
+        self::assertLessThanOrEqual($max, $solution->counter, $message);
+    }
+
+    /**
+     * @return AbstractLogger&object{levels: list<string>}
+     */
+    private static function levelLogger(): AbstractLogger
+    {
+        return new class() extends AbstractLogger {
+            /** @var list<string> */
+            public array $levels = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->levels[] = is_string($level) ? $level : '';
+            }
+        };
     }
 
     private function controller(AltchaServices $services): ChallengeController

@@ -19,6 +19,7 @@ use Symfony\Component\Lock\Exception\LockStorageException;
 use Symfony\Component\Lock\Key;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\PersistingStoreInterface;
+use Symfony\Component\Lock\Store\FlockStore;
 use Symfony\Component\Lock\Store\InMemoryStore;
 use Tomvondracek\Altcha\Challenge\ReplayStore;
 
@@ -258,6 +259,30 @@ final class ReplayStoreTest extends TestCase
         self::assertSame(['error', 'error'], $logger->levels);
     }
 
+    /**
+     * A FlockStore never deletes its lock files: solutions share 256 locks, so accepting many
+     * solutions leaves at most 256 files, not one per solution.
+     */
+    public function testLockFilesStayFewHoweverManySolutionsAreAccepted(): void
+    {
+        $dir = sys_get_temp_dir() . '/bolt-altcha-locks-' . bin2hex(random_bytes(6));
+        mkdir($dir);
+
+        try {
+            $store = new ReplayStore(new ArrayAdapter(), new MockClock(), new LockFactory(new FlockStore($dir)));
+            for ($i = 0; $i < 1000; ++$i) {
+                self::assertTrue($store->consume('signature-' . $i, null));
+            }
+
+            $files = self::files($dir);
+            self::assertLessThanOrEqual(256, count($files));
+            self::assertGreaterThan(200, count($files), '1000 solutions spread over the buckets');
+        } finally {
+            array_map(unlink(...), self::files($dir));
+            rmdir($dir);
+        }
+    }
+
     public function testFailingLockReleaseIsLoggedAsAWarning(): void
     {
         $lockStore = new class() implements PersistingStoreInterface {
@@ -313,6 +338,16 @@ final class ReplayStoreTest extends TestCase
 
         self::assertGreaterThan(0, $pool->pruned);
         self::assertLessThan(100, $pool->pruned);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function files(string $dir): array
+    {
+        $files = glob($dir . '/*');
+
+        return $files === false ? [] : $files;
     }
 
     /**

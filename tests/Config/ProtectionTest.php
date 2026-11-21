@@ -8,11 +8,13 @@ use Bolt\Configuration\Config;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Tomvondracek\Altcha\Challenge\HmacKeyProvider;
 use Tomvondracek\Altcha\Config\AltchaConfigLoader;
 use Tomvondracek\Altcha\Config\ConfigValidationWarmer;
 use Tomvondracek\Altcha\Config\Protection;
 use Tomvondracek\Altcha\Exception\InvalidConfigurationException;
+use Tomvondracek\Altcha\Log\LogThrottle;
 use Tomvondracek\Altcha\Tests\AltchaTestTrait;
 
 /**
@@ -81,6 +83,44 @@ final class ProtectionTest extends TestCase
         self::assertCount(2, $logger->records, 'logged again in the next request of a worker');
     }
 
+    /**
+     * Without the published widget no visitor could solve a challenge: every automatic check stands
+     * down (the password reset forms too, not only the login).
+     */
+    public function testUnpublishedWidgetSwitchesItOffAndIsLoggedOnce(): void
+    {
+        $logger = $this->logger();
+        $protection = new Protection($this->configLoader(), new HmacKeyProvider(self::STRONG), $logger, $this->assets(false));
+
+        self::assertNull($protection->activeConfig());
+        self::assertNull($protection->activeConfig());
+        self::assertCount(1, $logger->records);
+        self::assertSame('critical', $logger->records[0][0]);
+        self::assertStringContainsString('extensions:configure', $logger->records[0][1]);
+
+        self::assertNotNull((new Protection($this->configLoader(), new HmacKeyProvider(self::STRONG), $logger, $this->assets()))->activeConfig());
+    }
+
+    /**
+     * Logged once per request, and with a LogThrottle once per window across requests: a broken
+     * setup must not turn into a critical alert per request.
+     */
+    public function testProblemsAreLoggedOncePerWindowAcrossRequests(): void
+    {
+        $logger = $this->logger();
+        $throttle = new LogThrottle(new ArrayAdapter());
+        $broken = $this->tempDir();
+        file_put_contents($broken . '/tomvondracek-altcha.yaml', "enabled: maybe\n");
+
+        // One new instance per request, as in PHP-FPM.
+        for ($i = 0; $i < 5; ++$i) {
+            (new Protection($this->configLoader(), new HmacKeyProvider('!ChangeMe!'), $logger, null, $throttle))->activeConfig();
+            (new AltchaConfigLoader($this->boltConfig($broken), $logger, $throttle))->tryLoad();
+        }
+
+        self::assertCount(2, $logger->records, 'the weak key and the invalid config, once each');
+    }
+
     public function testLoaderResetReadsTheFileAgain(): void
     {
         $dir = $this->tempDir();
@@ -98,7 +138,9 @@ final class ProtectionTest extends TestCase
     {
         $warmer = new ConfigValidationWarmer($this->brokenLoader("enabled: maybe\n"), new HmacKeyProvider(self::STRONG));
 
-        self::assertFalse($warmer->isOptional());
+        // Optional: `cache:clear` and `cache:warmup` run it, a web request that rebuilds the
+        // container doesn't (it would fail that visitor's request).
+        self::assertTrue($warmer->isOptional());
 
         $this->expectException(InvalidConfigurationException::class);
 

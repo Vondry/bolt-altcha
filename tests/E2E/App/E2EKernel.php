@@ -27,7 +27,8 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  *     package's own config/services.yaml and config/routes.yaml (via the project's
  *     vendor/tomvondracek/bolt-altcha, a symlink to this repository);
  *   - Bolt's real LoginFormAuthenticator on a `main` firewall with `login_throttling`, as in
- *     Bolt's security.yaml, with a user repository that needs no database;
+ *     Bolt's security.yaml, with a user repository that needs no database, and a second login
+ *     (`form_login`, a members' area) for the route guard;
  *   - Bolt's real ResetPasswordRequestFormType and ChangePasswordFormType, handled by a controller
  *     that does what Bolt's ResetPasswordController does with them.
  */
@@ -124,6 +125,12 @@ final class E2EKernel extends Kernel
                     'pattern' => '^/',
                     'provider' => 'bolt_users',
                     'custom_authenticators' => [LoginFormAuthenticator::class],
+                    // A second login, handled inside the firewall like any authenticator's: what
+                    // a site would protect under `routes:`.
+                    'form_login' => [
+                        'login_path' => 'member_login',
+                        'check_path' => 'member_login_check',
+                    ],
                     'login_throttling' => [
                         'max_attempts' => 50,
                     ],
@@ -179,6 +186,10 @@ final class E2EKernel extends Kernel
             ->controller([TestController::class, 'resetPasswordRequest']);
         $routes->add('bolt_reset_password', '/bolt/reset-password/reset')
             ->controller([TestController::class, 'changePassword']);
+        $routes->add('member_login', '/member/login')
+            ->controller([TestController::class, 'homepage']);
+        $routes->add('member_login_check', '/member/login-check')
+            ->methods(['POST']);
         $routes->add('newsletter_subscribe', '/newsletter')
             ->controller([TestController::class, 'newsletter'])
             ->methods(['POST']);

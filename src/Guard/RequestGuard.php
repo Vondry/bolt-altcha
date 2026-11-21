@@ -24,9 +24,10 @@ use Tomvondracek\Altcha\Verification\Verifier;
  * Only submissions are checked: requests whose real HTTP method or overridden method
  * (X-HTTP-Method-Override, `_method`) is unsafe. A POST that claims to be a GET is still checked.
  *
- * A request is checked once: after it passed, further checks of the same request, or of a
- * sub-request it forwards to, pass too. The solution is single-use, so a second check would
- * otherwise always fail.
+ * A request is checked once per profile: after it passed, further checks for the same profile, of
+ * the same request or of a sub-request it forwards to, pass too (the solution is single-use, so a
+ * second check would otherwise always fail). A check for another profile verifies the solution
+ * again, and fails: a solution for a cheaper profile never satisfies a stricter one.
  */
 final readonly class RequestGuard
 {
@@ -65,7 +66,7 @@ final readonly class RequestGuard
      */
     public function check(Request $request, string $profile, AltchaConfig $config): ?Response
     {
-        if (! self::isSubmission($request) || $this->alreadyVerified($request)) {
+        if (! self::isSubmission($request) || $this->alreadyVerified($request, $profile)) {
             return null;
         }
 
@@ -90,10 +91,10 @@ final readonly class RequestGuard
         return new RedirectResponse($this->backUrl($request), Response::HTTP_SEE_OTHER);
     }
 
-    private function alreadyVerified(Request $request): bool
+    private function alreadyVerified(Request $request, string $profile): bool
     {
-        return $request->attributes->has(self::VERIFIED)
-            || ($this->requestStack->getMainRequest()?->attributes->has(self::VERIFIED) ?? false);
+        return $request->attributes->get(self::VERIFIED) === $profile
+            || $this->requestStack->getMainRequest()?->attributes->get(self::VERIFIED) === $profile;
     }
 
     /**

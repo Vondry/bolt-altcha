@@ -179,6 +179,6 @@ trait AltchaTestTrait
             $requestStack->push($request);
         }
 
-        return new WidgetRenderer($services->loader, $urlGenerator, $requestStack, new WidgetTexts(self::translator()), $services->protection, $this->assets($published), $logger ?? new NullLogger());
+        return new WidgetRenderer($services->loader, $urlGenerator, $requestStack, new WidgetTexts(self::translator()), $services->protection, $this->assets($published), $logger ?? new NullLogger(), $services->keys);
     }
 }

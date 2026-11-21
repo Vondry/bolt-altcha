@@ -180,6 +180,7 @@ final class ConfigServicesTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', dirname(__DIR__));
+        $container->setParameter('kernel.cache_dir', dirname(__DIR__) . '/var/cache/test');
         $container->setParameter('kernel.secret', 'secret');
         $container->setParameter('bolt.public_folder', 'public');
 

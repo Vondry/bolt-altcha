@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tomvondracek\Altcha\Config;
 
+use JsonException;
 use Tomvondracek\Altcha\Exception\InvalidConfigurationException;
+use Tomvondracek\Altcha\Security\LoginAltchaSubscriber;
 
 /**
  * The validated contents of config/extensions/tomvondracek-altcha.yaml. Every key is optional;
@@ -104,6 +106,12 @@ final readonly class AltchaConfig
 
         $routes = [];
         foreach (self::map($raw, 'routes') as $routeName => $reference) {
+            // Checked by `bolt.login` (LoginAltchaSubscriber): the route guard would check the same
+            // solution a second time, and a single-use solution fails the second check.
+            if ((string) $routeName === LoginAltchaSubscriber::LOGIN_ROUTE && $reference !== false && $reference !== null) {
+                throw InvalidConfigurationException::at('routes.' . $routeName, 'Bolt\'s login is protected with `bolt.login`, not under `routes`.');
+            }
+
             $profile = self::profileReference($reference, self::DEFAULT_PROFILE, 'routes.' . $routeName, $profiles);
             if ($profile !== null) {
                 $routes[(string) $routeName] = $profile;
@@ -233,10 +241,39 @@ final readonly class AltchaConfig
                 throw InvalidConfigurationException::at($path . '.configuration', 'must be a map of the widget\'s options (written in camelCase, as in the ALTCHA docs).');
             }
 
+            self::assertRenderable($value, $path . '.' . $name);
+
             $attributes[$name] = $value;
         }
 
         return $attributes;
+    }
+
+    /**
+     * A value WidgetRenderer can write into the page, checked here so a mistake surfaces in
+     * tryLoad() (protection off, logged) and ConfigValidationWarmer (deploy fails), never as an
+     * error while a page, the login page among them, is rendered: maps become JSON, which has no
+     * NaN, infinity or invalid UTF-8 (YAML `.nan`, `.inf`, `!!binary`).
+     */
+    private static function assertRenderable(mixed $value, string $path): void
+    {
+        if (is_float($value) && ! is_finite($value)) {
+            throw InvalidConfigurationException::at($path, 'must be a finite number.');
+        }
+
+        if (is_array($value)) {
+            try {
+                json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            } catch (JsonException $exception) {
+                throw InvalidConfigurationException::at($path, 'can\'t be written as JSON (' . $exception->getMessage() . '): no .nan, .inf or binary values.');
+            }
+
+            return;
+        }
+
+        if ($value !== null && ! is_scalar($value)) {
+            throw InvalidConfigurationException::at($path, 'must be a string, number, boolean, map or null.');
+        }
     }
 
     /**

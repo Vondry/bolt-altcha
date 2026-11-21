@@ -54,6 +54,14 @@ final readonly class HmacKeyProvider
     }
 
     /**
+     * @throws InvalidConfigurationException when no strong key is available
+     */
+    public function assertUsable(): void
+    {
+        $this->masterKey();
+    }
+
+    /**
      * Whether a strong key is available; signatureKey() and keySignatureKey() throw otherwise.
      */
     public function isUsable(): bool

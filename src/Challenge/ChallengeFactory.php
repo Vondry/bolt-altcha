@@ -7,6 +7,7 @@ namespace Tomvondracek\Altcha\Challenge;
 use AltchaOrg\Altcha\Altcha;
 use AltchaOrg\Altcha\Challenge;
 use AltchaOrg\Altcha\CreateChallengeOptions;
+use InvalidArgumentException;
 use Psr\Clock\ClockInterface;
 use Tomvondracek\Altcha\Config\Profile;
 
@@ -22,15 +23,23 @@ final readonly class ChallengeFactory
     ) {
     }
 
-    public function create(Profile $profile): Challenge
+    /**
+     * @param int $difficulty multiplies the counter range (`counter_min`, `counter_max`), and so the
+     *                        visitor's work; the server's work stays one derivation at `cost`
+     */
+    public function create(Profile $profile, int $difficulty = 1): Challenge
     {
+        if ($difficulty < 1) {
+            throw new InvalidArgumentException(sprintf('The difficulty must be at least 1, %d given.', $difficulty));
+        }
+
         $settings = $profile->challenge;
 
         return $this->altcha()->createChallenge(new CreateChallengeOptions(
             algorithm: Algorithms::create($settings->algorithm),
             cost: $settings->cost,
             keyLength: $settings->keyLength,
-            counter: random_int($settings->counterMin, $settings->counterMax),
+            counter: random_int($settings->counterMin * $difficulty, $settings->counterMax * $difficulty),
             expiresAt: $this->clock->now()->getTimestamp() + $settings->expires,
             data: [
                 'profile' => $profile->name,
