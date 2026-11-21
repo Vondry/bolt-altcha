@@ -10,6 +10,8 @@ use AltchaOrg\Altcha\Payload;
 use AltchaOrg\Altcha\SolveChallengeOptions;
 use Bolt\Configuration\Config;
 use PHPUnit\Framework\Attributes\After;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Clock\MockClock;
@@ -162,7 +164,7 @@ trait AltchaTestTrait
     /**
      * The renderer with the challenge route as `/altcha/challenge/<profile>`.
      */
-    private function widgetRenderer(AltchaServices $services, ?Request $request = new Request(), bool $published = true): WidgetRenderer
+    private function widgetRenderer(AltchaServices $services, ?Request $request = new Request(), bool $published = true, ?LoggerInterface $logger = null): WidgetRenderer
     {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')
@@ -177,6 +179,6 @@ trait AltchaTestTrait
             $requestStack->push($request);
         }
 
-        return new WidgetRenderer($services->loader, $urlGenerator, $requestStack, new WidgetTexts(self::translator()), $services->protection, $this->assets($published));
+        return new WidgetRenderer($services->loader, $urlGenerator, $requestStack, new WidgetTexts(self::translator()), $services->protection, $this->assets($published), $logger ?? new NullLogger());
     }
 }

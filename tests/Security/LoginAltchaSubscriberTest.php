@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomvondracek\Altcha\Tests\Security;
 
+use Bolt\Security\LoginFormAuthenticator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Stringable;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AuthenticatorInterface;
+use Symfony\Component\Security\Http\Authenticator\Debug\TraceableAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\Event\CheckPassportEvent;
@@ -96,6 +98,27 @@ final class LoginAltchaSubscriberTest extends TestCase
     }
 
     /**
+     * Bolt's own authenticator is checked whatever the route: should Bolt rename or add a login
+     * route, the check doesn't silently stop. In debug mode, it is wrapped.
+     */
+    public function testBoltsAuthenticatorIsCheckedOnAnyRoute(): void
+    {
+        $services = $this->services(self::LOGIN_ON);
+        $request = Request::create('/bolt/sign-in', 'POST');
+        $request->attributes->set('_route', 'bolt_sign_in');
+        $bolt = self::createStub(LoginFormAuthenticator::class);
+
+        foreach ([$bolt, new TraceableAuthenticator($bolt)] as $authenticator) {
+            try {
+                $this->subscriber($services, $request)->onCheckPassport($this->event($authenticator));
+                self::fail('The login must fail: ' . get_debug_type($authenticator));
+            } catch (CustomUserMessageAuthenticationException $exception) {
+                self::assertSame(LoginAltchaSubscriber::MESSAGE_KEY, $exception->getMessageKey());
+            }
+        }
+    }
+
+    /**
      * A weak key or a broken config must not lock the editors out (Protection logs it).
      */
     public function testWeakKeyLetsTheLoginThrough(): void
@@ -157,10 +180,10 @@ final class LoginAltchaSubscriberTest extends TestCase
             : new LoginAltchaSubscriber($services->protection, $services->verifier, $requestStack, $this->assets($published), $logger);
     }
 
-    private function event(): CheckPassportEvent
+    private function event(?AuthenticatorInterface $authenticator = null): CheckPassportEvent
     {
         return new CheckPassportEvent(
-            self::createStub(AuthenticatorInterface::class),
+            $authenticator ?? self::createStub(AuthenticatorInterface::class),
             new SelfValidatingPassport(new UserBadge('admin'))
         );
     }

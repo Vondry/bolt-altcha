@@ -6,7 +6,9 @@ namespace Tomvondracek\Altcha\Tests\Widget;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use stdClass;
+use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Tomvondracek\Altcha\Tests\AltchaTestTrait;
 use Tomvondracek\Altcha\Widget\WidgetRenderer;
@@ -218,6 +220,48 @@ final class WidgetRendererTest extends TestCase
         ])->renderLogin();
 
         self::assertStringContainsString('challenge="/altcha/challenge/login" name="altcha"', $html);
+    }
+
+    /**
+     * Browsers offer WebCrypto, which the widget solves with, only in secure contexts: a login
+     * page served over plain HTTP locks everybody out, so it is logged.
+     */
+    public function testALoginPageOverPlainHttpIsLogged(): void
+    {
+        $loginOn = [
+            'profiles' => [
+                'login' => [],
+            ],
+            'bolt' => [
+                'login' => true,
+            ],
+        ];
+        $cases = [
+            'http://cms.example/bolt/login' => ['warning'],
+            'https://cms.example/bolt/login' => [],
+            'http://localhost/bolt/login' => [],
+            'http://site.localhost/bolt/login' => [],
+            'http://127.0.0.1:8000/bolt/login' => [],
+            'http://[::1]/bolt/login' => [],
+            'http://127.example/bolt/login' => ['warning'],
+        ];
+
+        foreach ($cases as $uri => $expected) {
+            $logger = new class() extends AbstractLogger {
+                /** @var list<string> */
+                public array $levels = [];
+
+                public function log($level, string|Stringable $message, array $context = []): void
+                {
+                    $this->levels[] = is_string($level) ? $level : '';
+                }
+            };
+
+            $html = $this->widgetRenderer($this->services($loginOn), Request::create($uri), true, $logger)->renderLogin();
+
+            self::assertStringContainsString('<altcha-widget', $html, $uri);
+            self::assertSame($expected, $logger->levels, $uri);
+        }
     }
 
     /**

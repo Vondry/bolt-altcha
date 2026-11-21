@@ -6,6 +6,9 @@ namespace Tomvondracek\Altcha\Widget;
 
 use InvalidArgumentException;
 use JsonException;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Tomvondracek\Altcha\Assets\AssetsStatus;
@@ -58,6 +61,7 @@ final readonly class WidgetRenderer
         private WidgetTexts $texts,
         private Protection $protection,
         private AssetsStatus $assets,
+        private LoggerInterface $logger = new NullLogger(),
     ) {
     }
 
@@ -100,12 +104,23 @@ final readonly class WidgetRenderer
      * The widget for Bolt's login form, or nothing while the login is not checked: `bolt.login`
      * off, the protection off (Protection), or the widget not published (the same conditions as
      * LoginAltchaSubscriber).
+     *
+     * Logs a warning when the page is not a secure context: the widget solves with WebCrypto,
+     * which browsers only offer on HTTPS pages and on localhost, so over plain HTTP nobody can log
+     * in. The check itself never depends on the request (a bot would just post over HTTP).
      */
     public function renderLogin(): string
     {
         $config = $this->protection->activeConfig();
         if ($config === null || $config->loginProfile === null || ! $this->assets->isPublished()) {
             return '';
+        }
+
+        $request = $this->requestStack->getMainRequest();
+        if ($request !== null && ! self::isSecureContext($request)) {
+            $this->logger->warning('ALTCHA protects the login, but the login page was served over plain HTTP ({host}). Browsers solve the challenge only on HTTPS pages (and on localhost): if they really load it over HTTP, nobody can log in. Serve the site over HTTPS; behind a proxy that terminates TLS, configure Symfony\'s trusted proxies.', [
+                'host' => $request->getHost(),
+            ]);
         }
 
         return $this->render($config->loginProfile);
@@ -171,6 +186,24 @@ final readonly class WidgetRenderer
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
             )
         );
+    }
+
+    /**
+     * Whether browsers treat the page as a secure context (and offer WebCrypto): HTTPS, or a
+     * loopback host.
+     */
+    private static function isSecureContext(Request $request): bool
+    {
+        if ($request->isSecure()) {
+            return true;
+        }
+
+        $host = mb_strtolower(trim($request->getHost(), '[]'));
+
+        return $host === 'localhost'
+            || str_ends_with($host, '.localhost')
+            || $host === '::1'
+            || (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false && str_starts_with($host, '127.'));
     }
 
     /**

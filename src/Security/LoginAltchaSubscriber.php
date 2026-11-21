@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Tomvondracek\Altcha\Security;
 
+use Bolt\Security\LoginFormAuthenticator;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\Debug\TraceableAuthenticator;
 use Symfony\Component\Security\Http\Event\CheckPassportEvent;
 use Tomvondracek\Altcha\Assets\AssetsStatus;
 use Tomvondracek\Altcha\Config\Protection;
@@ -29,6 +32,10 @@ use Tomvondracek\Altcha\Verification\Verifier;
  * It stands down (logged as critical) while the widget is not published: a deploy that skipped
  * `extensions:configure` must not lock every editor out. The same for an invalid configuration or
  * a weak key (Protection).
+ *
+ * A passport is Bolt's login when Bolt's LoginFormAuthenticator made it (also behind the debug
+ * TraceableAuthenticator), or when it comes from a POST to `bolt_login`: the authenticator
+ * matches that route today; checking both keeps the login covered should either change.
  *
  * Only the login form is covered. Bolt's default `api` firewall also accepts HTTP Basic
  * credentials; remove `http_basic` from it when the API is not used.
@@ -62,7 +69,7 @@ final readonly class LoginAltchaSubscriber implements EventSubscriberInterface
     public function onCheckPassport(CheckPassportEvent $event): void
     {
         $request = $this->requestStack->getCurrentRequest();
-        if ($request === null || $request->attributes->get('_route') !== self::LOGIN_ROUTE || ! $request->isMethod('POST')) {
+        if ($request === null || ! self::isBoltLogin($event, $request)) {
             return;
         }
 
@@ -80,5 +87,16 @@ final readonly class LoginAltchaSubscriber implements EventSubscriberInterface
         if (! $this->verifier->verifyRequest($request, $config->loginProfile)->isValid()) {
             throw new CustomUserMessageAuthenticationException(self::MESSAGE_KEY);
         }
+    }
+
+    private static function isBoltLogin(CheckPassportEvent $event, Request $request): bool
+    {
+        $authenticator = $event->getAuthenticator();
+        if ($authenticator instanceof TraceableAuthenticator) {
+            $authenticator = $authenticator->getAuthenticator();
+        }
+
+        return $authenticator instanceof LoginFormAuthenticator
+            || ($request->attributes->get('_route') === self::LOGIN_ROUTE && $request->isMethod('POST'));
     }
 }
