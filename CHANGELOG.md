@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-11-22
+
+### Changed
+
+- The Composer package leaves out the tests, CI and tool configuration (`.gitattributes` with
+  `export-ignore`). The ALTCHA widget in `assets/altcha/` still ships.
+
+### Fixed
+
+- `LICENSE` names the author instead of the extension template's placeholder.
+
+### Development
+
+- Rector also applies its Doctrine rules.
+- ECS, PHPStan, PHPUnit and Rector use the same configuration as the other extensions.
+- GitHub Actions are pinned to commit SHAs.
+
 ## [1.0.4] - 2026-11-21
 
 Updates the vendored ALTCHA widget to 3.7.0. After updating, run `bin/console extensions:configure`
@@ -171,7 +188,8 @@ configuration and its runtime requirements are unchanged.
   widget's texts are translated by Symfony and handed to the widget, so a project can reword
   them in its own translations/bolt_altcha.<locale>.yaml.
 
-[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/Vondry/bolt-altcha/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Vondry/bolt-altcha/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Vondry/bolt-altcha/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Vondry/bolt-altcha/compare/v1.0.1...v1.0.2
