@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-11-23
+
 ### Development
 
 - CI checks that every PHP file parses on each supported PHP version, runs
@@ -195,7 +197,8 @@ configuration and its runtime requirements are unchanged.
   widget's texts are translated by Symfony and handed to the widget, so a project can reword
   them in its own translations/bolt_altcha.<locale>.yaml.
 
-[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/Vondry/bolt-altcha/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/Vondry/bolt-altcha/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/Vondry/bolt-altcha/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Vondry/bolt-altcha/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Vondry/bolt-altcha/compare/v1.0.2...v1.0.3
