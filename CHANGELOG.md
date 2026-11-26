@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- With Trusted Types enforced (`require-trusted-types-for 'script'`), the widget broke while it
+  mounted and never added its field, so a protected form, the login too, always failed the
+  check. Svelte writes the widget's footer to `innerHTML` as a plain string, past the widget's
+  `svelte-trusted-html` policy, and `new Worker()` needs a trusted URL as well. The loader now
+  creates a `default` policy that lets through the widget's texts and its two worker URLs,
+  nothing else. **Allow it in the CSP:** `trusted-types svelte-trusted-html default`.
+- `WidgetRenderer::ASSETS_VERSION` is `3.7.0-2`: run `bin/console extensions:configure` after the
+  update, the login check stands down until the new widget files are published.
+
 ## [1.0.6] - 2026-11-23
 
 ### Development
