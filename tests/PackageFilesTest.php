@@ -48,4 +48,22 @@ final class PackageFilesTest extends TestCase
             self::assertStringContainsString("'" . $algorithm . "'", $loader);
         }
     }
+
+    /**
+     * Under Trusted Types the widget assigns its footer to innerHTML and constructs its workers
+     * from plain strings; without a `default` policy created before the widget loads, it can't
+     * render and no protected form can be sent.
+     */
+    public function testLoaderCreatesTheDefaultTrustedTypesPolicyBeforeTheWidget(): void
+    {
+        $loader = (string) file_get_contents(self::ASSETS . '/bolt-altcha.js');
+
+        $policy = mb_strpos($loader, "createPolicy('default'");
+        $import = mb_strpos($loader, "await import(asset('./altcha.js'))");
+        self::assertNotFalse($policy);
+        self::assertNotFalse($import);
+        self::assertLessThan($import, $policy);
+        self::assertStringContainsString('createHTML:', $loader);
+        self::assertStringContainsString('createScriptURL:', $loader);
+    }
 }

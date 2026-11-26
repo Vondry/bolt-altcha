@@ -22,7 +22,8 @@ pictures to click, no third-party request, no cookie. By default nothing is show
   same mistakes, so a deploy catches them.
 - **Strict CSP friendly**: the widget, its workers and its translations are served from your site. Tested under
   `Content-Security-Policy: default-src 'self'`. With Trusted Types enforced (`require-trusted-types-for 'script'`),
-  allow the widget's policy: `trusted-types svelte-trusted-html`.
+  allow the widget's policy and the loader's `default` policy: `trusted-types svelte-trusted-html default`. The
+  `default` policy lets through only the widget's texts and its two worker URLs.
 
 ## Requirements
 
